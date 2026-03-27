@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Camera & microphone permissions -->
+    <key>NSCameraUsageDescription</key>
+    <string>RoBee uses the camera for hive monitoring and live inspection views.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>RoBee uses the microphone to record inspection videos with audio.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>RoBee saves inspection photos to your photo library.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>RoBee saves inspection photos to your photo library.</string>
+
+    <!-- Local network (arm WebSocket on LAN) -->
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>RoBee connects to the robotic arm controller on your local network.</string>
+    <key>NSBonjourServices</key>
+    <array>
+        <string>_robee._tcp</string>
+    </array>
+
+    <!-- Stripe URL scheme -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>robee</string>
+            </array>
+        </dict>
+    </array>
+
+    <!-- Flutter boilerplate -->
+    <key>CFBundleName</key>
+    <string>RoBee</string>
+    <key>CFBundleDisplayName</key>
+    <string>RoBee</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleSignature</key>
+    <string>????</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>arm64</string>
+    </array>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>CADisableMinimumFrameDurationOnPhone</key>
+    <true/>
+    <key>UIApplicationSupportsIndirectInputEvents</key>
+    <true/>
+</dict>
+</plist>

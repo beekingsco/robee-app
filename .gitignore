@@ -1,0 +1,28 @@
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.iml
+.idea/
+*.swp
+*.lock
+!pubspec.lock
+
+# Environment
+.env
+*.env.local
+google-services.json
+GoogleService-Info.plist
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/.last_build_id
+
+# macOS
+macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Coverage
+coverage/
