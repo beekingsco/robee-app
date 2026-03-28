@@ -3,23 +3,47 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'services/supabase_service.dart';
 import 'config/app_config.dart';
-import 'config/router.dart';
+import 'config/router.dart' show routerProvider, demoModeProvider;
+import 'theme/robee_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Supabase
-  await SupabaseService.initialize();
+  // Supabase — graceful fallback to demo mode if credentials not configured
+  bool demoMode = false;
+  if (AppConfig.supabaseUrl == 'https://your-project.supabase.co' ||
+      AppConfig.supabaseUrl.isEmpty ||
+      AppConfig.supabaseAnonKey == 'your-anon-key' ||
+      AppConfig.supabaseAnonKey.isEmpty) {
+    demoMode = true;
+  } else {
+    try {
+      await SupabaseService.initialize();
+    } catch (e) {
+      demoMode = true;
+    }
+  }
 
-  // Stripe
-  Stripe.publishableKey = AppConfig.stripePublishableKey;
-  await Stripe.instance.applySettings();
+  // Stripe — graceful fallback if key not configured
+  if (AppConfig.stripePublishableKey != 'pk_test_placeholder' &&
+      AppConfig.stripePublishableKey.isNotEmpty) {
+    try {
+      Stripe.publishableKey = AppConfig.stripePublishableKey;
+      await Stripe.instance.applySettings();
+    } catch (_) {}
+  }
 
-  runApp(const ProviderScope(child: RoBeeApp()));
+  runApp(ProviderScope(
+    overrides: [
+      demoModeProvider.overrideWith((ref) => demoMode),
+    ],
+    child: RoBeeApp(demoMode: demoMode),
+  ));
 }
 
 class RoBeeApp extends ConsumerWidget {
-  const RoBeeApp({super.key});
+  final bool demoMode;
+  const RoBeeApp({super.key, this.demoMode = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,33 +51,40 @@ class RoBeeApp extends ConsumerWidget {
     return MaterialApp.router(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
-      theme: _buildTheme(),
+      theme: RoBeeTheme.darkTheme,
       routerConfig: router,
-    );
-  }
-
-  ThemeData _buildTheme() {
-    const seedColor = Color(0xFFF5A623); // RoBee amber/honey
-    return ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: seedColor,
-        brightness: Brightness.light,
-      ),
-      appBarTheme: const AppBarTheme(
-        centerTitle: true,
-        elevation: 0,
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        filled: true,
-      ),
+      builder: (context, child) {
+        return Stack(
+          children: [
+            child ?? const SizedBox.shrink(),
+            if (demoMode)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    color: const Color(0xFFF4A025).withValues(alpha: 0.9),
+                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+                    child: const SafeArea(
+                      bottom: false,
+                      child: Text(
+                        '⚡ DEMO MODE — no backend connected',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

@@ -1,0 +1,238 @@
+import 'package:flutter/material.dart';
+
+/// RoBee Design System — Sprint 2
+/// All color constants, text styles, and ThemeData.
+class RoBeeTheme {
+  RoBeeTheme._();
+
+  // ── Colors ─────────────────────────────────────────────────────────────────
+  static const Color background = Color(0xFF0C0A09);
+  static const Color amber = Color(0xFFD98639);
+  static const Color amberDark = Color(0xFFB8702B);
+  static const Color glassWhite5 = Color(0x0DFFFFFF);
+  static const Color glassWhite10 = Color(0x1AFFFFFF);
+  static const Color glassWhite20 = Color(0x33FFFFFF);
+  static const Color glassWhite60 = Color(0x99FFFFFF);
+  static const Color alertRed = Color(0x1AEF4444);
+  static const Color alertRedBorder = Color(0x33EF4444);
+  static const Color healthGreen = Color(0xFF4ADE80);
+  static const Color healthYellow = Color(0xFFFACC15);
+  static const Color healthRed = Color(0xFFEF4444);
+  static const Color signalPurple = Color(0xFFA855F7);
+
+  // ── Amber glow box shadow ──────────────────────────────────────────────────
+  static List<BoxShadow> get amberGlow => [
+        BoxShadow(
+          color: amber.withOpacity(0.4),
+          blurRadius: 16,
+          spreadRadius: 2,
+        ),
+      ];
+
+  static List<BoxShadow> get amberGlowSubtle => [
+        BoxShadow(
+          color: amber.withOpacity(0.2),
+          blurRadius: 8,
+          spreadRadius: 1,
+        ),
+      ];
+
+  // ── Text Styles ────────────────────────────────────────────────────────────
+  static const TextStyle displayLarge = TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -1.0,
+    color: Colors.white,
+  );
+
+  static const TextStyle displayMedium = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.5,
+    color: Colors.white,
+  );
+
+  static const TextStyle headlineLarge = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.3,
+    color: Colors.white,
+  );
+
+  static const TextStyle headlineMedium = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.2,
+    color: Colors.white,
+  );
+
+  static const TextStyle bodyLarge = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+    color: Colors.white,
+  );
+
+  static const TextStyle bodyMedium = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    color: glassWhite60,
+  );
+
+  static const TextStyle labelLarge = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 1.0,
+    color: glassWhite60,
+  );
+
+  static const TextStyle labelSmall = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 1.5,
+    color: glassWhite60,
+  );
+
+  static const TextStyle monoLarge = TextStyle(
+    fontSize: 14,
+    fontFamily: 'monospace',
+    fontWeight: FontWeight.w600,
+    color: amber,
+    letterSpacing: 1.0,
+  );
+
+  static const TextStyle monoSmall = TextStyle(
+    fontSize: 11,
+    fontFamily: 'monospace',
+    fontWeight: FontWeight.w500,
+    color: glassWhite60,
+    letterSpacing: 0.8,
+  );
+
+  // ── ThemeData ──────────────────────────────────────────────────────────────
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: background,
+      colorScheme: const ColorScheme.dark(
+        primary: amber,
+        onPrimary: background,
+        secondary: amberDark,
+        onSecondary: Colors.white,
+        surface: Color(0xFF1A1714),
+        onSurface: Colors.white,
+        error: healthRed,
+        onError: Colors.white,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: background,
+        elevation: 0,
+        centerTitle: false,
+        iconTheme: IconThemeData(color: Colors.white),
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.3,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: glassWhite5,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: glassWhite10, width: 1),
+        ),
+      ),
+      dividerTheme: const DividerThemeData(
+        color: glassWhite10,
+        thickness: 1,
+      ),
+      textTheme: const TextTheme(
+        displayLarge: displayLarge,
+        displayMedium: displayMedium,
+        headlineLarge: headlineLarge,
+        headlineMedium: headlineMedium,
+        bodyLarge: bodyLarge,
+        bodyMedium: bodyMedium,
+        labelLarge: labelLarge,
+        labelSmall: labelSmall,
+      ),
+      iconTheme: const IconThemeData(color: glassWhite60),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: glassWhite5,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: glassWhite10),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: glassWhite10),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: amber, width: 1.5),
+        ),
+        labelStyle: const TextStyle(color: glassWhite60),
+        hintStyle: const TextStyle(color: glassWhite60),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: glassWhite5,
+        selectedColor: amber.withOpacity(0.2),
+        labelStyle: const TextStyle(color: Colors.white, fontSize: 12),
+        side: const BorderSide(color: glassWhite10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: const Color(0xFF1A1714),
+        contentTextStyle: const TextStyle(color: Colors.white),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        behavior: SnackBarBehavior.floating,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: amber,
+          foregroundColor: background,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          minimumSize: const Size(0, 48),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: amber,
+          foregroundColor: background,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          minimumSize: const Size(0, 48),
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return amber;
+          return glassWhite60;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return amber.withOpacity(0.3);
+          return glassWhite10;
+        }),
+      ),
+    );
+  }
+
+  // ── Health color helper ────────────────────────────────────────────────────
+  static Color healthColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'healthy':
+      case 'good':
+        return healthGreen;
+      case 'warning':
+      case 'moderate':
+        return healthYellow;
+      case 'critical':
+      case 'poor':
+        return healthRed;
+      default:
+        return glassWhite60;
+    }
+  }
+}

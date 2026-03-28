@@ -46,6 +46,13 @@ dependencies:
   # Logging
   logger: ^2.3.0
 
+  # Sprint 2 additions
+  mobile_scanner: ^5.2.3
+  url_launcher: ^6.3.0
+  local_auth: ^2.3.0
+  fl_chart: ^0.69.0
+  flutter_animate: ^4.5.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

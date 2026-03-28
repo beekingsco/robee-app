@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:logger/logger.dart';
+import '../../config/router.dart' show demoModeProvider;
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   static final _log = Logger(printer: SimplePrinter());
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
@@ -30,6 +32,13 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _loading = true; _errorMsg = null; });
 
+    // Demo mode — skip auth and go straight to home
+    if (ref.read(demoModeProvider)) {
+      await Future.delayed(const Duration(milliseconds: 600));
+      if (mounted) context.go('/home');
+      return;
+    }
+
     try {
       await Supabase.instance.client.auth.signInWithPassword(
         email: _emailCtrl.text.trim(),
@@ -37,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       if (mounted) context.go('/home');
     } on AuthException catch (e) {
-      setState(() { _errorMsg = e.message; });
+      setState(() { _errorMsg = e.message; _loading = false; });
       _log.w('Login error: ${e.message}');
     } finally {
       if (mounted) setState(() { _loading = false; });

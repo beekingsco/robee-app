@@ -2,6 +2,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:logger/logger.dart';
 import '../models/profile.dart';
 import '../models/reserve.dart';
+import '../models/trailer.dart';
+import '../models/hive.dart';
+import '../models/alert.dart';
+import '../models/frame_snapshot.dart';
 import '../config/app_config.dart';
 
 /// SupabaseService — thin wrapper around the Supabase client.
@@ -166,6 +170,122 @@ class SupabaseService {
         .single();
 
     return Reserve.fromJson(data);
+  }
+
+  // ── Trailers ───────────────────────────────────────────────────────────────
+  Future<List<Trailer>> getTrailers() async {
+    final uid = currentUser?.id;
+    if (uid == null) return [];
+
+    final data = await _client
+        .from('trailers')
+        .select()
+        .eq('archived', false)
+        .order('created_at', ascending: false);
+
+    return (data as List).map((r) => Trailer.fromJson(r)).toList();
+  }
+
+  Future<Trailer?> updateTrailer(Trailer trailer) async {
+    final data = await _client
+        .from('trailers')
+        .update(trailer.toJson())
+        .eq('id', trailer.id)
+        .select()
+        .maybeSingle();
+
+    if (data == null) return null;
+    return Trailer.fromJson(data);
+  }
+
+  // ── Hives ──────────────────────────────────────────────────────────────────
+  Future<List<Hive>> getHives(String trailerId) async {
+    if (trailerId.isEmpty) return [];
+
+    final data = await _client
+        .from('hives')
+        .select()
+        .eq('trailer_id', trailerId)
+        .order('hive_number', ascending: true);
+
+    return (data as List).map((r) => Hive.fromJson(r)).toList();
+  }
+
+  Future<Hive?> createHive({
+    required String trailerId,
+    required int hiveNumber,
+    required String name,
+  }) async {
+    final data = await _client
+        .from('hives')
+        .insert({
+          'trailer_id': trailerId,
+          'hive_number': hiveNumber,
+          'name': name,
+          'health_status': 'healthy',
+          'queen_status': 'unknown',
+          'entrance_state': 'open',
+          'box_orientation': 'brood_near_rail',
+        })
+        .select()
+        .maybeSingle();
+
+    if (data == null) return null;
+    return Hive.fromJson(data);
+  }
+
+  // ── Trailers (create) ──────────────────────────────────────────────────────
+  Future<Trailer?> createTrailer({
+    required String trailerId,
+    required String name,
+  }) async {
+    final uid = currentUser?.id;
+    if (uid == null) throw Exception('Not authenticated');
+
+    final data = await _client
+        .from('trailers')
+        .insert({
+          'id': trailerId,
+          'name': name,
+          'status': 'online',
+          'temp_unit': 'F',
+          'weight_unit': 'lbs',
+          'inspection_frequency': 'daily',
+          'archived': false,
+          'shared_with': <String>[],
+        })
+        .select()
+        .maybeSingle();
+
+    if (data == null) return null;
+    return Trailer.fromJson(data);
+  }
+
+  // ── Alerts ─────────────────────────────────────────────────────────────────
+  Future<List<RoBeeAlert>> getAlerts({String? trailerId}) async {
+    final data = trailerId != null
+        ? await _client
+            .from('alerts')
+            .select()
+            .eq('trailer_id', trailerId)
+            .order('created_at', ascending: false)
+        : await _client
+            .from('alerts')
+            .select()
+            .order('created_at', ascending: false);
+
+    return (data as List).map((r) => RoBeeAlert.fromJson(r)).toList();
+  }
+
+  // ── Frame Snapshots ────────────────────────────────────────────────────────
+  Future<List<FrameSnapshot>> getFrameSnapshots(String hiveId) async {
+    final data = await _client
+        .from('frame_snapshots')
+        .select()
+        .eq('hive_id', hiveId)
+        .order('timestamp', ascending: false);
+
+    return (data as List).map((r) => FrameSnapshot.fromJson(r)).toList();
   }
 
   // ── Realtime subscriptions ─────────────────────────────────────────────────

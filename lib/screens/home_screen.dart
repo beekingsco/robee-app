@@ -1,218 +1,386 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/trailer.dart';
+import '../models/alert.dart';
+import '../services/mock_data.dart';
+import '../services/supabase_service.dart';
+import '../theme/robee_theme.dart';
+import '../widgets/trailer_card.dart';
 
-/// Home screen — dashboard with camera and arm control quick-launch.
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final user = Supabase.instance.client.auth.currentUser;
-    final cs = Theme.of(context).colorScheme;
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
+class _HomeScreenState extends State<HomeScreen> {
+  List<Trailer> _trailers = [];
+  List<RoBeeAlert> _unresolvedAlerts = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    try {
+      final svc = SupabaseService();
+      if (svc.isSignedIn) {
+        final t = await svc.getTrailers();
+        final a = await svc.getAlerts();
+        if (mounted) {
+          setState(() {
+            _trailers = t.isEmpty ? MockData.trailers : t;
+            _unresolvedAlerts = a.where((x) => !x.isResolved).toList();
+            _loading = false;
+          });
+          return;
+        }
+      }
+    } catch (_) {}
+    if (mounted) {
+      setState(() {
+        _trailers = MockData.trailers;
+        _unresolvedAlerts = MockData.unresolvedAlerts;
+        _loading = false;
+      });
+    }
+  }
+
+  String _dateStr() {
+    final now = DateTime.now();
+    const months = [
+      '', 'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const days = [
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+    ];
+    return '${days[now.weekday - 1]}, ${months[now.month]} ${now.day}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.hive_rounded, color: cs.primary, size: 28),
-            const SizedBox(width: 8),
-            const Text('RoBee'),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => context.push('/settings'),
+      backgroundColor: RoBeeTheme.background,
+      body: Stack(
+        children: [
+          // Full-bleed background image with gradient overlay
+          Positioned.fill(
+            child: ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Color(0x990C0A09),
+                  Color(0xFF0C0A09),
+                ],
+                stops: [0.0, 0.45, 0.75],
+              ).createShader(bounds),
+              blendMode: BlendMode.darken,
+              child: Image.network(
+                'https://images.unsplash.com/photo-1587593810167-a84920ea0781?q=80&w=2070',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: const Color(0xFF1A1208),
+                ),
+              ),
+            ),
+          ),
+          // Additional dark gradient at bottom
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.transparent,
+                    RoBeeTheme.background,
+                  ],
+                  stops: [0.0, 0.4, 0.85],
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: RefreshIndicator(
+              color: RoBeeTheme.amber,
+              backgroundColor: const Color(0xFF1A1714),
+              onRefresh: _load,
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Header row
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _dateStr(),
+                                      style: RoBeeTheme.labelLarge.copyWith(
+                                        color: RoBeeTheme.amber,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    const Text(
+                                      'My Apiaries',
+                                      style: RoBeeTheme.displayMedium,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Row(
+                                children: [
+                                  // Add trailer button
+                                  GestureDetector(
+                                    onTap: () => context.push('/register-trailer'),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: RoBeeTheme.amber.withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: RoBeeTheme.amber.withOpacity(0.4),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.add_rounded,
+                                              color: RoBeeTheme.amber, size: 16),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Add Trailer',
+                                            style: RoBeeTheme.labelLarge.copyWith(
+                                              color: RoBeeTheme.amber,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  GestureDetector(
+                                    onTap: () => context.push('/settings'),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: RoBeeTheme.glassWhite5,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                            color: RoBeeTheme.glassWhite10),
+                                      ),
+                                      child: const Icon(Icons.settings_outlined,
+                                          color: RoBeeTheme.glassWhite60,
+                                          size: 18),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Alerts banner
+                          if (_unresolvedAlerts.isNotEmpty)
+                            _AlertsBanner(
+                              alerts: _unresolvedAlerts,
+                              onTap: () => context.push('/alerts'),
+                            ),
+
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Text(
+                                'MY TRAILERS',
+                                style: RoBeeTheme.labelLarge.copyWith(
+                                    letterSpacing: 2),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: RoBeeTheme.amber.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '${_trailers.length}',
+                                  style: RoBeeTheme.monoSmall.copyWith(
+                                    color: RoBeeTheme.amber,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Trailer list
+                  if (_loading)
+                    const SliverFillRemaining(
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: RoBeeTheme.amber,
+                        ),
+                      ),
+                    )
+                  else if (_trailers.isEmpty)
+                    SliverFillRemaining(
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.hive_rounded,
+                                color: RoBeeTheme.glassWhite60.withOpacity(0.5),
+                                size: 48),
+                            const SizedBox(height: 16),
+                            const Text('No trailers yet',
+                                style: RoBeeTheme.headlineMedium),
+                            const SizedBox(height: 8),
+                            const Text(
+                                'Add your first trailer to get started.',
+                                style: RoBeeTheme.bodyMedium),
+                            const SizedBox(height: 20),
+                            ElevatedButton.icon(
+                              onPressed: () =>
+                                  context.push('/register-trailer'),
+                              icon: const Icon(Icons.add_rounded),
+                              label: const Text('Add Trailer'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i) => Padding(
+                            padding: const EdgeInsets.only(bottom: 14),
+                            child: TrailerCard(
+                              trailer: _trailers[i],
+                              alerts: _unresolvedAlerts
+                                  .where((a) =>
+                                      a.trailerId == _trailers[i].id)
+                                  .toList(),
+                              onTap: () => context
+                                  .push('/trailers/${_trailers[i].id}'),
+                              onSettingsTap: () => context.push(
+                                  '/trailers/${_trailers[i].id}/settings'),
+                            ),
+                          ),
+                          childCount: _trailers.length,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Greeting
-              Text(
-                'Hello, ${user?.userMetadata?['full_name'] ?? 'Beekeeper'} 👋',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Your RoBee is ready.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
-              ),
-              const SizedBox(height: 24),
-
-              // Status card
-              _StatusCard(),
-              const SizedBox(height: 20),
-
-              // Quick actions grid
-              Text('Quick Actions',
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 12),
-              _QuickActionsGrid(),
-              const SizedBox(height: 20),
-
-              // Reserve CTA (shown if no active deposit)
-              _ReserveCTA(),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
 
-class _StatusCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: const BoxDecoration(
-                color: Colors.orange,
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('RoBee Status',
-                      style: Theme.of(context).textTheme.labelLarge),
-                  Text('Not connected — tap Arm Control to connect',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          )),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _QuickActionsGrid extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.3,
-      children: [
-        _ActionCard(
-          icon: Icons.videocam_rounded,
-          label: 'Camera',
-          subtitle: 'Live view & capture',
-          onTap: () => context.push('/home/camera'),
-        ),
-        _ActionCard(
-          icon: Icons.precision_manufacturing_rounded,
-          label: 'Arm Control',
-          subtitle: 'Move & command',
-          onTap: () => context.push('/home/arm'),
-        ),
-        _ActionCard(
-          icon: Icons.bookmark_added_rounded,
-          label: 'My Reserve',
-          subtitle: 'Deposit status',
-          onTap: () => context.push('/reserve'),
-        ),
-        _ActionCard(
-          icon: Icons.analytics_outlined,
-          label: 'Telemetry',
-          subtitle: 'Sensor data',
-          onTap: () {}, // TODO: telemetry screen
-        ),
-      ],
-    );
-  }
-}
-
-class _ActionCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String subtitle;
+class _AlertsBanner extends StatelessWidget {
+  final List<RoBeeAlert> alerts;
   final VoidCallback onTap;
 
-  const _ActionCard({
-    required this.icon,
-    required this.label,
-    required this.subtitle,
-    required this.onTap,
-  });
+  const _AlertsBanner({required this.alerts, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: cs.primary, size: 32),
-              const Spacer(),
-              Text(label, style: Theme.of(context).textTheme.labelLarge),
-              Text(subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      )),
-            ],
+    final hasCritical = alerts.any((a) => a.severity == 'critical');
+    final criticalCount = alerts.where((a) => a.severity == 'critical').length;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: hasCritical
+              ? RoBeeTheme.healthRed.withOpacity(0.1)
+              : RoBeeTheme.healthYellow.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: hasCritical
+                ? RoBeeTheme.healthRed.withOpacity(0.35)
+                : RoBeeTheme.healthYellow.withOpacity(0.3),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ReserveCTA extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Card(
-      color: cs.primaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
         child: Row(
           children: [
+            Icon(
+              hasCritical ? Icons.warning_rounded : Icons.info_outline_rounded,
+              color: hasCritical ? RoBeeTheme.healthRed : RoBeeTheme.healthYellow,
+              size: 20,
+            ),
+            const SizedBox(width: 10),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Secure your RoBee',
-                      style: Theme.of(context).textTheme.titleSmall),
-                  const SizedBox(height: 4),
-                  Text('\$100 fully refundable deposit',
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
+              child: Text(
+                hasCritical
+                    ? '$criticalCount critical alert${criticalCount > 1 ? 's' : ''} need attention'
+                    : '${alerts.length} active alert${alerts.length > 1 ? 's' : ''}',
+                style: TextStyle(
+                  color: hasCritical
+                      ? RoBeeTheme.healthRed
+                      : RoBeeTheme.healthYellow,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
               ),
             ),
-            FilledButton.tonal(
-              onPressed: () => context.push('/reserve/deposit'),
-              child: const Text('Reserve'),
+            // Badge
+            Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                color: hasCritical
+                    ? RoBeeTheme.healthRed
+                    : RoBeeTheme.healthYellow,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  '${alerts.length}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              Icons.chevron_right,
+              color: hasCritical ? RoBeeTheme.healthRed : RoBeeTheme.healthYellow,
+              size: 18,
             ),
           ],
         ),

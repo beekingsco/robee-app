@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -10,13 +9,13 @@ class NetworkService {
   static final _log = Logger(printer: SimplePrinter());
 
   late final Dio _dio;
-  ConnectivityResult _connectivity = ConnectivityResult.none;
+  List<ConnectivityResult> _connectivity = [ConnectivityResult.none];
 
   // ── Connectivity stream ───────────────────────────────────────────────────────
-  final _connectivityController = StreamController<ConnectivityResult>.broadcast();
-  Stream<ConnectivityResult> get connectivityStream => _connectivityController.stream;
-  ConnectivityResult get connectivity => _connectivity;
-  bool get isOnline => _connectivity != ConnectivityResult.none;
+  final _connectivityController = StreamController<List<ConnectivityResult>>.broadcast();
+  Stream<List<ConnectivityResult>> get connectivityStream => _connectivityController.stream;
+  List<ConnectivityResult> get connectivity => _connectivity;
+  bool get isOnline => !_connectivity.contains(ConnectivityResult.none) || _connectivity.length > 1;
 
   NetworkService({String? baseUrl}) {
     _dio = Dio(BaseOptions(
@@ -48,6 +47,9 @@ class NetworkService {
       _connectivityController.add(r);
     });
   }
+
+  /// Convenience: returns true if any active connection type is not none.
+  bool get isConnected => _connectivity.any((r) => r != ConnectivityResult.none);
 
   // ── Auth header injection ─────────────────────────────────────────────────────
   void setAuthToken(String? token) {
