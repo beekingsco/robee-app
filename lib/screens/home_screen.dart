@@ -84,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ).createShader(bounds),
               blendMode: BlendMode.darken,
               child: Image.network(
-                'https://images.unsplash.com/photo-1587593810167-a84920ea0781?q=80&w=2070',
+                'https://images.unsplash.com/photo-1504618223053-559bdef9ad5c?q=80&w=2070',
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
                   color: const Color(0xFF1A1208),

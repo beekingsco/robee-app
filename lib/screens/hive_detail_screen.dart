@@ -128,7 +128,7 @@ class _HiveDetailScreenState extends State<HiveDetailScreen> {
               ).createShader(bounds),
               blendMode: BlendMode.darken,
               child: Image.network(
-                'https://images.unsplash.com/photo-1587593810167-a84920ea0781?q=80&w=2070',
+                'https://images.unsplash.com/photo-1504618223053-559bdef9ad5c?q=80&w=2070',
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
                   decoration: BoxDecoration(
@@ -396,10 +396,11 @@ class _FrameScanGallery extends StatelessWidget {
 
   // Unsplash hive placeholder images
   static const _placeholders = [
-    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=400',
-    'https://images.unsplash.com/photo-1573601127946-c37b79b28dac?q=80&w=400',
-    'https://images.unsplash.com/photo-1587593810167-a84920ea0781?q=80&w=400',
-    'https://images.unsplash.com/photo-1568254183919-78a4f43a2877?q=80&w=400',
+    // Frame scan placeholders — real beehive frame close-ups
+    'https://images.unsplash.com/photo-1601598851547-4302969d0614?q=80&w=400', // bees on honeycomb frame
+    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=400',    // honeycomb close-up
+    'https://images.unsplash.com/photo-1504618223053-559bdef9ad5c?q=80&w=400', // beekeeper with frame
+    'https://images.unsplash.com/photo-1568254183919-78a4f43a2877?q=80&w=400', // honeycomb detail
   ];
 
   String _timeAgo(DateTime dt) {
