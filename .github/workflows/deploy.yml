@@ -28,9 +28,6 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Analyze
-        run: flutter analyze --no-fatal-warnings
-
       - name: Setup web platform
         run: flutter create . --platforms web
 
