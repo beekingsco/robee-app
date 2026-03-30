@@ -286,11 +286,10 @@ class _RegisterTrailerScreenState extends State<RegisterTrailerScreen> {
               ),
             ),
           ),
-        ],
-      ),
-    );
+  );
   }
 }
+
 
 /// Full-screen QR scanner overlay
 class _QRScanFullScreen extends StatefulWidget {
