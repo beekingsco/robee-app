@@ -39,15 +39,7 @@ class SignalBars extends StatelessWidget {
             decoration: BoxDecoration(
               color: isActive ? RoBeeTheme.signalPurple : RoBeeTheme.glassWhite20,
               borderRadius: BorderRadius.circular(2),
-              boxShadow: isActive
-                  ? [
-                      BoxShadow(
-                        color: RoBeeTheme.signalPurple.withOpacity(0.5),
-                        blurRadius: 4,
-                        spreadRadius: 0,
-                      ),
-                    ]
-                  : null,
+
             ),
           ),
         );

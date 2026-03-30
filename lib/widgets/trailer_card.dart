@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/trailer.dart';
 import '../models/alert.dart';
@@ -26,29 +25,8 @@ class TrailerCard extends StatefulWidget {
   State<TrailerCard> createState() => _TrailerCardState();
 }
 
-class _TrailerCardState extends State<TrailerCard>
-    with SingleTickerProviderStateMixin {
+class _TrailerCardState extends State<TrailerCard> {
   bool _pressed = false;
-  late AnimationController _glowCtrl;
-  late Animation<double> _glowAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _glowCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
-    _glowAnim = Tween<double>(begin: 0.3, end: 0.6).animate(
-      CurvedAnimation(parent: _glowCtrl, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _glowCtrl.dispose();
-    super.dispose();
-  }
 
   Color _healthColor(String status) => RoBeeTheme.healthColor(status);
 
@@ -70,212 +48,150 @@ class _TrailerCardState extends State<TrailerCard>
         widget.onTap?.call();
       },
       onTapCancel: () => setState(() => _pressed = false),
-      child: AnimatedBuilder(
-        animation: _glowAnim,
-        builder: (context, child) {
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: _pressed
-                  ? [
-                      BoxShadow(
-                        color: RoBeeTheme.amber
-                            .withOpacity(_glowAnim.value * 0.5),
-                        blurRadius: 20,
-                        spreadRadius: 2,
-                      ),
-                    ]
-                  : [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-            ),
-            child: child,
-          );
-        },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(18),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: _pressed
-                    ? RoBeeTheme.amber.withOpacity(0.06)
-                    : RoBeeTheme.glassWhite5,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: _pressed
-                      ? RoBeeTheme.amber.withOpacity(0.5)
-                      : RoBeeTheme.glassWhite10,
-                  width: _pressed ? 1.5 : 1,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Row 1: Name + Gear icon + Hive dots
-                  Row(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _pressed ? RoBeeTheme.amber.withOpacity(0.05) : RoBeeTheme.panel,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _pressed ? RoBeeTheme.amber.withOpacity(0.5) : RoBeeTheme.border,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Row 1: Name + gear + hive dots ──────────────────────────
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      Text(
+                        trailer.name,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      if (trailer.address != null) ...[
+                        const SizedBox(height: 3),
+                        Row(
                           children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    trailer.name,
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.white,
-                                      letterSpacing: -0.5,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (trailer.address != null) ...[
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.location_on_outlined,
-                                    size: 11,
-                                    color: RoBeeTheme.glassWhite60,
-                                  ),
-                                  const SizedBox(width: 3),
-                                  Expanded(
-                                    child: Text(
-                                      trailer.address!.split(',').first,
-                                      style: RoBeeTheme.bodyMedium
-                                          .copyWith(fontSize: 12),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
+                            const Icon(Icons.location_on_outlined,
+                                size: 11, color: RoBeeTheme.glassWhite60),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child: Text(
+                                trailer.address!.split(',').first,
+                                style: RoBeeTheme.bodyMedium.copyWith(fontSize: 12),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ],
+                            ),
                           ],
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Settings gear
-                      GestureDetector(
-                        onTap: widget.onSettingsTap,
-                        behavior: HitTestBehavior.opaque,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: RoBeeTheme.glassWhite5,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: RoBeeTheme.glassWhite10),
-                          ),
-                          child: const Icon(
-                            Icons.settings_outlined,
-                            size: 14,
-                            color: RoBeeTheme.glassWhite60,
-                          ),
-                        ),
-                      ),
+                      ],
                     ],
                   ),
-                  const SizedBox(height: 14),
-
-                  // Row 2: Health summary + hive dot cluster
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          healthySummary
-                              ? 'All systems healthy'
-                              : '$unhealthyCount hive${unhealthyCount > 1 ? 's' : ''} need attention',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: healthySummary
-                                ? RoBeeTheme.healthGreen
-                                : RoBeeTheme.healthYellow,
-                          ),
-                        ),
-                      ),
-                      // Hive dot cluster: 2 rows × 3 cols
-                      _HiveDotGrid(hives: hives),
-                    ],
+                ),
+                const SizedBox(width: 8),
+                // Settings gear
+                GestureDetector(
+                  onTap: widget.onSettingsTap,
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: RoBeeTheme.panel,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: RoBeeTheme.border),
+                    ),
+                    child: const Icon(
+                      Icons.settings_outlined,
+                      size: 14,
+                      color: RoBeeTheme.glassWhite60,
+                    ),
                   ),
-                  const SizedBox(height: 14),
+                ),
+                const SizedBox(width: 8),
+                _HiveDotGrid(hives: hives),
+              ],
+            ),
+            const SizedBox(height: 12),
 
-                  // Footer row: weather | signal | battery
-                  Row(
-                    children: [
-                      // Weather placeholder (uses trailer location)
-                      _WeatherChip(trailer: trailer),
-                      const Spacer(),
-                      SignalBars(
-                        value: trailer.status == 'online' ? 85 : 15,
-                      ),
-                      const SizedBox(width: 12),
-                      BatteryIndicator(level: trailer.batteryLevel ?? 0),
-                    ],
+            // ── Row 2: Health summary ────────────────────────────────────
+            Text(
+              healthySummary
+                  ? 'All systems healthy'
+                  : '$unhealthyCount hive${unhealthyCount > 1 ? 's' : ''} need attention',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: healthySummary
+                    ? RoBeeTheme.healthGreen
+                    : RoBeeTheme.healthYellow,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // ── Footer: weather | signal | battery ───────────────────────
+            Row(
+              children: [
+                _WeatherChip(trailer: trailer),
+                const Spacer(),
+                SignalBars(value: trailer.status == 'online' ? 85 : 15),
+                const SizedBox(width: 12),
+                BatteryIndicator(level: trailer.batteryLevel ?? 0),
+              ],
+            ),
+
+            // ── Alert strip ───────────────────────────────────────────────
+            if (widget.alerts.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: (hasCritical ? RoBeeTheme.healthRed : RoBeeTheme.healthYellow)
+                      .withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: (hasCritical
+                            ? RoBeeTheme.healthRed
+                            : RoBeeTheme.healthYellow)
+                        .withOpacity(0.3),
                   ),
-
-                  // Alert strip
-                  if (widget.alerts.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: (hasCritical
-                                ? RoBeeTheme.healthRed
-                                : RoBeeTheme.healthYellow)
-                            .withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: (hasCritical
-                                  ? RoBeeTheme.healthRed
-                                  : RoBeeTheme.healthYellow)
-                              .withOpacity(0.3),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            hasCritical
-                                ? Icons.warning_rounded
-                                : Icons.info_outline,
-                            size: 12,
-                            color: hasCritical
-                                ? RoBeeTheme.healthRed
-                                : RoBeeTheme.healthYellow,
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            '${widget.alerts.length} alert${widget.alerts.length > 1 ? 's' : ''}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: hasCritical
-                                  ? RoBeeTheme.healthRed
-                                  : RoBeeTheme.healthYellow,
-                            ),
-                          ),
-                        ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      hasCritical ? Icons.warning_rounded : Icons.info_outline,
+                      size: 12,
+                      color: hasCritical
+                          ? RoBeeTheme.healthRed
+                          : RoBeeTheme.healthYellow,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      '${widget.alerts.length} alert${widget.alerts.length > 1 ? 's' : ''}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: hasCritical
+                            ? RoBeeTheme.healthRed
+                            : RoBeeTheme.healthYellow,
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
-            ),
-          ),
+            ],
+          ],
         ),
       ),
     );
@@ -342,20 +258,11 @@ class _Dot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 10,
-      height: 10,
+      width: 9,
+      height: 9,
       decoration: BoxDecoration(
         color: color.withOpacity(0.85),
         shape: BoxShape.circle,
-        boxShadow: color == Colors.transparent
-            ? null
-            : [
-                BoxShadow(
-                  color: color.withOpacity(0.4),
-                  blurRadius: 4,
-                  spreadRadius: 0.5,
-                ),
-              ],
       ),
     );
   }

@@ -144,12 +144,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: Row(
                 children: [
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: const Icon(Icons.arrow_back_ios_rounded,
-                        color: Colors.white, size: 20),
-                  ),
-                  const SizedBox(width: 16),
                   const Text('ALERTS', style: RoBeeTheme.displayMedium),
                   const Spacer(),
                   if (_unresolvedCount > 0)
@@ -239,7 +233,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                                       Container(
                                         width: 1,
                                         height: 12,
-                                        color: RoBeeTheme.glassWhite20,
+                                        color: RoBeeTheme.border,
                                       ),
                                       const SizedBox(width: 8),
                                       Text(

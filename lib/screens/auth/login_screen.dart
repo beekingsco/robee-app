@@ -142,19 +142,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: RoBeeTheme.amber.withOpacity(0.12),
+                        color: RoBeeTheme.amber.withOpacity(0.10),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: RoBeeTheme.amber.withOpacity(0.45),
+                          color: RoBeeTheme.amber.withOpacity(0.5),
                           width: 1.5,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: RoBeeTheme.amber.withOpacity(0.25),
-                            blurRadius: 24,
-                            spreadRadius: 4,
-                          ),
-                        ],
                       ),
                       child: const Center(child: _HexLogo()),
                     ),

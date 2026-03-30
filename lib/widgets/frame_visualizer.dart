@@ -264,7 +264,7 @@ class _FrameSlotState extends State<_FrameSlot>
           borderRadius: BorderRadius.circular(5),
           border: Border.all(
             color: widget.isFeeder
-                ? RoBeeTheme.glassWhite10
+                ? RoBeeTheme.border
                 : widget.isSelected
                     ? RoBeeTheme.amber
                     : widget.isActive
@@ -272,23 +272,16 @@ class _FrameSlotState extends State<_FrameSlot>
                         : baseColor.withOpacity(0.5),
             width: widget.isSelected ? 1.5 : 1,
           ),
+          // Active frame only gets amber glow (functional state indicator)
           boxShadow: widget.isActive
               ? [
                   BoxShadow(
-                    color: RoBeeTheme.amber.withOpacity(0.5),
+                    color: RoBeeTheme.amber.withOpacity(0.45),
                     blurRadius: 8,
-                    spreadRadius: 1,
+                    spreadRadius: 0,
                   ),
                 ]
-              : widget.isSelected
-                  ? [
-                      BoxShadow(
-                        color: RoBeeTheme.amber.withOpacity(0.3),
-                        blurRadius: 6,
-                        spreadRadius: 1,
-                      ),
-                    ]
-                  : null,
+              : null,
         ),
         child: widget.isFeeder
             ? const Center(

@@ -126,13 +126,7 @@ class _SlideToConfirmState extends State<SlideToConfirm>
                   decoration: BoxDecoration(
                     color: _confirmed ? color : color.withOpacity(0.8),
                     borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withOpacity(0.4),
-                        blurRadius: 8,
-                        spreadRadius: 1,
-                      ),
-                    ],
+
                   ),
                   child: Icon(
                     _confirmed ? Icons.check_rounded : Icons.arrow_forward_rounded,

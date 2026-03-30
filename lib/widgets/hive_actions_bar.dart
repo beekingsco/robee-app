@@ -22,9 +22,9 @@ class HiveActionsBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: RoBeeTheme.glassWhite5,
+        color: RoBeeTheme.panel,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RoBeeTheme.glassWhite10),
+        border: Border.all(color: RoBeeTheme.border),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,

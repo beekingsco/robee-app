@@ -278,9 +278,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected
-        ? RoBeeTheme.amber
-        : Colors.white.withOpacity(0.4);
+    final iconColor = selected ? RoBeeTheme.amber : Colors.white.withOpacity(0.5);
 
     return GestureDetector(
       onTap: onTap,
@@ -293,7 +291,7 @@ class _NavItem extends StatelessWidget {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Icon(icon, color: color, size: 24),
+                Icon(icon, color: iconColor, size: 24),
                 if (badgeCount > 0)
                   Positioned(
                     top: -4,
@@ -309,16 +307,18 @@ class _NavItem extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 10,
-                fontWeight:
-                    selected ? FontWeight.w600 : FontWeight.w400,
+            // Active: show label. Inactive: no label (Tesla bottom nav style)
+            if (selected) ...[
+              const SizedBox(height: 3),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: RoBeeTheme.amber,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),

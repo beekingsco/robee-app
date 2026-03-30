@@ -126,13 +126,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     color: RoBeeTheme.amber.withOpacity(0.4),
                     width: 1.5,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: RoBeeTheme.amber.withOpacity(0.3),
-                      blurRadius: 20,
-                      spreadRadius: 2,
-                    ),
-                  ],
+
                 ),
                 child: const Center(child: _HexLogo()),
               ),

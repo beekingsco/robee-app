@@ -33,20 +33,12 @@ class HiveCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      decoration: isServicing
-          ? BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: RoBeeTheme.amberGlow,
-            )
-          : null,
-      child: GlassCard(
+    return GlassCard(
         onTap: onTap,
         padding: const EdgeInsets.all(12),
         borderColor: isServicing
-            ? RoBeeTheme.amber.withOpacity(0.5)
-            : RoBeeTheme.glassWhite10,
+            ? RoBeeTheme.amber.withOpacity(0.6)
+            : RoBeeTheme.border,
         child: mode == HiveCardMode.minimal
             ? _MinimalContent(
                 hive: hive,
@@ -64,7 +56,6 @@ class HiveCard extends StatelessWidget {
                 tempUnit: tempUnit,
                 weightUnit: weightUnit,
               ),
-      ),
     );
   }
 }
@@ -86,64 +77,71 @@ class _MinimalContent extends StatelessWidget {
     required this.weightUnit,
   });
 
+  String get _lastInspected {
+    // Mock "last inspected" based on hive number for variety
+    final minutes = 20 + (hive.hiveNumber * 14) % 120;
+    if (minutes < 60) return '${minutes}m ago';
+    return '${(minutes / 60).floor()}h ago';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: healthColor,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: healthColor.withOpacity(0.5),
-                    blurRadius: 4,
-                    spreadRadius: 1,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                hive.name,
-                style: RoBeeTheme.headlineMedium.copyWith(fontSize: 13),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (isServicing)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                decoration: BoxDecoration(
-                  color: RoBeeTheme.amber.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: RoBeeTheme.amber.withOpacity(0.4)),
-                ),
-                child: Text(
-                  'SCAN',
-                  style: RoBeeTheme.labelSmall.copyWith(
-                    color: RoBeeTheme.amber,
-                    fontSize: 8,
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: healthColor,
+                    shape: BoxShape.circle,
                   ),
                 ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          '${tempDisplay.toStringAsFixed(1)}°$tempUnit',
-          style: RoBeeTheme.monoLarge.copyWith(fontSize: 12),
-        ),
-        Text(
-          '${hive.currentWeight?.toStringAsFixed(1) ?? '--'} $weightUnit',
-          style: RoBeeTheme.monoSmall,
-        ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    hive.name,
+                    style: RoBeeTheme.headlineMedium.copyWith(fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (isServicing)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: RoBeeTheme.amber.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(4),
+                      border:
+                          Border.all(color: RoBeeTheme.amber.withOpacity(0.4)),
+                    ),
+                    child: Text(
+                      'SCAN',
+                      style: RoBeeTheme.labelSmall.copyWith(
+                        color: RoBeeTheme.amber,
+                        fontSize: 8,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '${tempDisplay.toStringAsFixed(1)}°$tempUnit',
+              style: RoBeeTheme.monoLarge.copyWith(fontSize: 12),
+            ),
+            Text(
+              '${hive.currentWeight?.toStringAsFixed(1) ?? '--'} $weightUnit',
+              style: RoBeeTheme.monoSmall,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Last: $_lastInspected',
+              style: RoBeeTheme.labelSmall.copyWith(fontSize: 8),
+            ),
       ],
     );
   }

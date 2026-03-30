@@ -143,19 +143,8 @@ class _RegisterTrailerScreenState extends State<RegisterTrailerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: RoBeeTheme.background,
-      body: Stack(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF1A1208), RoBeeTheme.background],
-              ),
-            ),
-          ),
-          SafeArea(
-            child: SingleChildScrollView(
+      body: SafeArea(
+        child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -396,13 +385,7 @@ class _QRScanFullScreenState extends State<_QRScanFullScreen>
                         Colors.transparent,
                       ],
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: RoBeeTheme.amber.withOpacity(0.4),
-                        blurRadius: 8,
-                        spreadRadius: 2,
-                      ),
-                    ],
+
                   ),
                 ),
               );

@@ -32,7 +32,10 @@ class _InspectionBayState extends State<InspectionBay>
     super.initState();
     _scanController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      // Slow pulse when standby, fast when scanning
+      duration: widget.isScanning
+          ? const Duration(seconds: 2)
+          : const Duration(seconds: 3),
     );
     _scanAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _scanController, curve: Curves.linear),
@@ -41,19 +44,21 @@ class _InspectionBayState extends State<InspectionBay>
       CurvedAnimation(parent: _scanController, curve: Curves.easeInOut),
     );
 
-    if (widget.isScanning) {
-      _scanController.repeat();
-    }
+    // Always repeat — idle shows gentle standby pulse
+    _scanController.repeat();
   }
 
   @override
   void didUpdateWidget(InspectionBay old) {
     super.didUpdateWidget(old);
-    if (widget.isScanning && !_scanController.isAnimating) {
-      _scanController.repeat();
-    } else if (!widget.isScanning && _scanController.isAnimating) {
-      _scanController.stop();
-      _scanController.reset();
+    // Update duration when scanning state changes
+    if (widget.isScanning != old.isScanning) {
+      _scanController.duration = widget.isScanning
+          ? const Duration(seconds: 2)
+          : const Duration(seconds: 3);
+      if (!_scanController.isAnimating) {
+        _scanController.repeat();
+      }
     }
   }
 
@@ -67,41 +72,41 @@ class _InspectionBayState extends State<InspectionBay>
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: RoBeeTheme.glassWhite5,
-        borderRadius: BorderRadius.circular(16),
+        color: RoBeeTheme.panel,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: widget.isScanning
-              ? RoBeeTheme.amber.withOpacity(0.4)
-              : RoBeeTheme.glassWhite10,
+              ? RoBeeTheme.amber.withOpacity(0.5)
+              : RoBeeTheme.border,
         ),
-        boxShadow: widget.isScanning ? RoBeeTheme.amberGlowSubtle : null,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const SizedBox(height: 8),
-          // Status label
+          // Status label — STANDBY uses slow pulse, INSPECTING uses fast pulse
           AnimatedBuilder(
             animation: _pulseAnimation,
             builder: (context, child) {
-              return Opacity(
-                opacity: widget.isScanning ? _pulseAnimation.value : 0.5,
-                child: child,
-              );
+              final opacity = widget.isScanning
+                  ? _pulseAnimation.value
+                  : 0.35 + (_pulseAnimation.value * 0.3); // gentle idle
+              return Opacity(opacity: opacity, child: child);
             },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (widget.isScanning)
-                  Container(
-                    width: 6,
-                    height: 6,
-                    margin: const EdgeInsets.only(right: 6),
-                    decoration: const BoxDecoration(
-                      color: RoBeeTheme.amber,
-                      shape: BoxShape.circle,
-                    ),
+                Container(
+                  width: 6,
+                  height: 6,
+                  margin: const EdgeInsets.only(right: 6),
+                  decoration: BoxDecoration(
+                    color: widget.isScanning
+                        ? RoBeeTheme.amber
+                        : RoBeeTheme.glassWhite60,
+                    shape: BoxShape.circle,
                   ),
+                ),
                 Text(
                   widget.isScanning ? 'INSPECTING' : 'STANDBY',
                   style: RoBeeTheme.labelSmall.copyWith(

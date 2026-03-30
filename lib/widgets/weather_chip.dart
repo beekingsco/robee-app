@@ -49,9 +49,9 @@ class _WeatherChipState extends State<WeatherChip> {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: RoBeeTheme.glassWhite5,
+          color: RoBeeTheme.panel,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: RoBeeTheme.glassWhite10),
+          border: Border.all(color: RoBeeTheme.border),
         ),
         child: const SizedBox(
           width: 16,
@@ -68,9 +68,9 @@ class _WeatherChipState extends State<WeatherChip> {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: RoBeeTheme.glassWhite5,
+          color: RoBeeTheme.panel,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: RoBeeTheme.glassWhite10),
+          border: Border.all(color: RoBeeTheme.border),
         ),
         child: const Text('--', style: RoBeeTheme.bodyMedium),
       );
@@ -85,9 +85,9 @@ class _WeatherChipState extends State<WeatherChip> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: RoBeeTheme.glassWhite5,
+        color: RoBeeTheme.panel,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: RoBeeTheme.glassWhite10),
+        border: Border.all(color: RoBeeTheme.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

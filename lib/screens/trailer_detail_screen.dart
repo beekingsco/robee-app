@@ -191,6 +191,7 @@ class _TrailerDetailScreenState extends State<TrailerDetailScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                 child: GlassCard(
+                  borderRadius: 12,
                   padding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 10),
                   child: Row(

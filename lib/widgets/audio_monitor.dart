@@ -14,7 +14,6 @@ class AudioMonitor extends StatefulWidget {
 class _AudioMonitorState extends State<AudioMonitor>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  final _random = math.Random(42);
 
   static const _mockConcerns = [
     ('14:22', 'Elevated buzzing frequency detected'),
@@ -25,10 +24,11 @@ class _AudioMonitorState extends State<AudioMonitor>
   @override
   void initState() {
     super.initState();
+    // Continuous animation — shows the hive is alive
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
-    )..repeat(reverse: true);
+      duration: const Duration(milliseconds: 2400),
+    )..repeat();
   }
 
   @override
@@ -42,9 +42,9 @@ class _AudioMonitorState extends State<AudioMonitor>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RoBeeTheme.glassWhite5,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RoBeeTheme.glassWhite10),
+        color: RoBeeTheme.panel,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: RoBeeTheme.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,7 +60,8 @@ class _AudioMonitorState extends State<AudioMonitor>
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: RoBeeTheme.signalPurple.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(10),
@@ -79,16 +80,15 @@ class _AudioMonitorState extends State<AudioMonitor>
           ),
           const SizedBox(height: 12),
 
-          // Waveform
+          // 7-bar waveform — continuous sin-wave animation
           SizedBox(
-            height: 40,
+            height: 48,
             child: AnimatedBuilder(
               animation: _controller,
               builder: (context, child) {
                 return CustomPaint(
-                  painter: _WaveformPainter(
+                  painter: _BarWaveformPainter(
                     phase: _controller.value,
-                    random: _random,
                   ),
                   child: const SizedBox.expand(),
                 );
@@ -135,56 +135,51 @@ class _AudioMonitorState extends State<AudioMonitor>
   }
 }
 
-class _WaveformPainter extends CustomPainter {
-  final double phase;
-  final math.Random random;
+/// 7 bars with heights animated via sin waves, each offset by bar index.
+/// Bars animate continuously to show the hive is alive.
+class _BarWaveformPainter extends CustomPainter {
+  final double phase; // 0.0 → 1.0 (looping)
 
-  _WaveformPainter({required this.phase, required this.random});
+  _BarWaveformPainter({required this.phase});
+
+  static const int _barCount = 7;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = RoBeeTheme.signalPurple.withOpacity(0.7)
-      ..strokeWidth = 1.5
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    final barWidth = 3.0;
-    final barSpacing = 2.0;
-    final totalWidth = barWidth + barSpacing;
-    final barCount = (size.width / totalWidth).floor();
+    const barCount = _barCount;
+    final totalSpacing = size.width * 0.12;
+    final barWidth = (size.width - totalSpacing) / barCount;
+    final gap = totalSpacing / (barCount - 1);
     final centerY = size.height / 2;
 
-    final seed = math.Random(42);
-    final heights = List.generate(barCount, (i) {
-      final base = seed.nextDouble() * 0.7 + 0.1;
-      final wave = math.sin(i * 0.5 + phase * math.pi * 2) * 0.3;
-      return (base + wave).clamp(0.05, 1.0) * size.height * 0.9;
-    });
-
     for (int i = 0; i < barCount; i++) {
-      final x = i * totalWidth + barWidth / 2;
-      final h = heights[i];
+      // Each bar gets a different phase offset so they animate independently
+      final offset = i * (2 * math.pi / barCount);
+      final t = phase * 2 * math.pi + offset;
 
-      // Active bars glow
-      if (i % 4 == 0) {
-        final glowPaint = Paint()
-          ..color = RoBeeTheme.signalPurple.withOpacity(0.2)
-          ..strokeWidth = barWidth + 2
-          ..strokeCap = StrokeCap.round
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
-        canvas.drawLine(Offset(x, centerY - h / 2), Offset(x, centerY + h / 2),
-            glowPaint);
-      }
+      // Multiple sin components for organic feel
+      final h1 = math.sin(t) * 0.35;
+      final h2 = math.sin(t * 1.7 + 0.8) * 0.2;
+      final h3 = math.sin(t * 0.5 + 1.2) * 0.15;
+      final normalizedHeight = ((h1 + h2 + h3) + 0.85).clamp(0.15, 1.0);
 
+      final barHeight = normalizedHeight * size.height * 0.85;
+      final x = i * (barWidth + gap) + barWidth / 2;
+
+      // Main bar
+      final barPaint = Paint()
+        ..color = RoBeeTheme.signalPurple.withOpacity(0.75)
+        ..strokeWidth = barWidth
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke;
       canvas.drawLine(
-        Offset(x, centerY - h / 2),
-        Offset(x, centerY + h / 2),
-        paint,
+        Offset(x, centerY - barHeight / 2),
+        Offset(x, centerY + barHeight / 2),
+        barPaint,
       );
     }
   }
 
   @override
-  bool shouldRepaint(_WaveformPainter old) => old.phase != phase;
+  bool shouldRepaint(_BarWaveformPainter old) => old.phase != phase;
 }

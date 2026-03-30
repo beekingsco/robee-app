@@ -65,7 +65,7 @@ class TelemetryGraph extends StatelessWidget {
                   drawVerticalLine: false,
                   horizontalInterval: yRange > 0 ? yRange / 3 : 1,
                   getDrawingHorizontalLine: (v) => FlLine(
-                    color: RoBeeTheme.glassWhite10,
+                    color: RoBeeTheme.border,
                     strokeWidth: 1,
                   ),
                 ),
@@ -122,9 +122,9 @@ class TelemetryGraph extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: RoBeeTheme.glassWhite5,
+        color: RoBeeTheme.panel,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: RoBeeTheme.glassWhite10),
+        border: Border.all(color: RoBeeTheme.border),
       ),
       child: child,
     );

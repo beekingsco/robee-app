@@ -314,7 +314,7 @@ class _TrailerSettingsScreenState extends State<TrailerSettingsScreen> {
                                 if (_sharedWith.isNotEmpty) ...[
                                   const SizedBox(height: 12),
                                   const Divider(
-                                      color: RoBeeTheme.glassWhite10,
+                                      color: RoBeeTheme.border,
                                       height: 1),
                                   const SizedBox(height: 8),
                                   ..._sharedWith.map(
@@ -469,9 +469,9 @@ class _DropdownField<T> extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: RoBeeTheme.glassWhite5,
+            color: RoBeeTheme.panel,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: RoBeeTheme.glassWhite10),
+            border: Border.all(color: RoBeeTheme.border),
           ),
           child: DropdownButton<T>(
             value: value,

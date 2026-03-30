@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
 
-/// RoBee Design System — Sprint 2
-/// All color constants, text styles, and ThemeData.
+/// RoBee Design System — Sprint 4
+/// Tesla aesthetic: flat dark panels, single amber accent, surgical.
 class RoBeeTheme {
   RoBeeTheme._();
 
-  // ── Colors ─────────────────────────────────────────────────────────────────
+  // ── Core Colors ────────────────────────────────────────────────────────────
   static const Color background = Color(0xFF0C0A09);
+  static const Color panel = Color(0xFF141210);       // card backgrounds
+  static const Color border = Color(0x1AFFFFFF);      // white/10
   static const Color amber = Color(0xFFD98639);
   static const Color amberDark = Color(0xFFB8702B);
+
+  // ── Text opacity tokens ────────────────────────────────────────────────────
+  // Kept as-is — used throughout for text/icon alpha values
   static const Color glassWhite5 = Color(0x0DFFFFFF);
   static const Color glassWhite10 = Color(0x1AFFFFFF);
   static const Color glassWhite20 = Color(0x33FFFFFF);
   static const Color glassWhite60 = Color(0x99FFFFFF);
+
+  // ── Status Colors ──────────────────────────────────────────────────────────
   static const Color alertRed = Color(0x1AEF4444);
   static const Color alertRedBorder = Color(0x33EF4444);
   static const Color healthGreen = Color(0xFF4ADE80);
@@ -20,27 +27,27 @@ class RoBeeTheme {
   static const Color healthRed = Color(0xFFEF4444);
   static const Color signalPurple = Color(0xFFA855F7);
 
-  // ── Amber glow box shadow ──────────────────────────────────────────────────
+  // ── Active state: amber glow (ONLY for active/scanning) ───────────────────
   static List<BoxShadow> get amberGlow => [
         BoxShadow(
-          color: amber.withOpacity(0.4),
-          blurRadius: 16,
-          spreadRadius: 2,
+          color: amber.withOpacity(0.35),
+          blurRadius: 12,
+          spreadRadius: 0,
         ),
       ];
 
   static List<BoxShadow> get amberGlowSubtle => [
         BoxShadow(
-          color: amber.withOpacity(0.2),
-          blurRadius: 8,
-          spreadRadius: 1,
+          color: amber.withOpacity(0.18),
+          blurRadius: 6,
+          spreadRadius: 0,
         ),
       ];
 
   // ── Text Styles ────────────────────────────────────────────────────────────
   static const TextStyle displayLarge = TextStyle(
     fontSize: 32,
-    fontWeight: FontWeight.w800,
+    fontWeight: FontWeight.w700,
     letterSpacing: -1.0,
     color: Colors.white,
   );
@@ -61,7 +68,7 @@ class RoBeeTheme {
 
   static const TextStyle headlineMedium = TextStyle(
     fontSize: 16,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w600,
     letterSpacing: -0.2,
     color: Colors.white,
   );
@@ -78,26 +85,28 @@ class RoBeeTheme {
     color: glassWhite60,
   );
 
+  // Section labels: ALL CAPS, letterSpacing 1.5
   static const TextStyle labelLarge = TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 1.0,
-    color: glassWhite60,
-  );
-
-  static const TextStyle labelSmall = TextStyle(
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: FontWeight.w600,
     letterSpacing: 1.5,
     color: glassWhite60,
   );
 
+  static const TextStyle labelSmall = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 1.5,
+    color: glassWhite60,
+  );
+
+  // Monospace for ALL telemetry values
   static const TextStyle monoLarge = TextStyle(
     fontSize: 14,
     fontFamily: 'monospace',
     fontWeight: FontWeight.w600,
     color: amber,
-    letterSpacing: 1.0,
+    letterSpacing: 0.5,
   );
 
   static const TextStyle monoSmall = TextStyle(
@@ -105,7 +114,7 @@ class RoBeeTheme {
     fontFamily: 'monospace',
     fontWeight: FontWeight.w500,
     color: glassWhite60,
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
   );
 
   // ── ThemeData ──────────────────────────────────────────────────────────────
@@ -119,7 +128,7 @@ class RoBeeTheme {
         onPrimary: background,
         secondary: amberDark,
         onSecondary: Colors.white,
-        surface: Color(0xFF1A1714),
+        surface: panel,
         onSurface: Colors.white,
         error: healthRed,
         onError: Colors.white,
@@ -137,15 +146,15 @@ class RoBeeTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        color: glassWhite5,
+        color: panel,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: glassWhite10, width: 1),
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: border, width: 1),
         ),
       ),
       dividerTheme: const DividerThemeData(
-        color: glassWhite10,
+        color: border,
         thickness: 1,
       ),
       textTheme: const TextTheme(
@@ -161,14 +170,14 @@ class RoBeeTheme {
       iconTheme: const IconThemeData(color: glassWhite60),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: glassWhite5,
+        fillColor: panel,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: glassWhite10),
+          borderSide: const BorderSide(color: border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: glassWhite10),
+          borderSide: const BorderSide(color: border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -178,14 +187,14 @@ class RoBeeTheme {
         hintStyle: const TextStyle(color: glassWhite60),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: glassWhite5,
-        selectedColor: amber.withOpacity(0.2),
+        backgroundColor: panel,
+        selectedColor: amber.withOpacity(0.15),
         labelStyle: const TextStyle(color: Colors.white, fontSize: 12),
-        side: const BorderSide(color: glassWhite10),
+        side: const BorderSide(color: border),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: const Color(0xFF1A1714),
+        backgroundColor: panel,
         contentTextStyle: const TextStyle(color: Colors.white),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         behavior: SnackBarBehavior.floating,
@@ -194,6 +203,7 @@ class RoBeeTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: amber,
           foregroundColor: background,
+          elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           minimumSize: const Size(0, 48),
         ),
@@ -213,7 +223,7 @@ class RoBeeTheme {
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) return amber.withOpacity(0.3);
-          return glassWhite10;
+          return border;
         }),
       ),
     );

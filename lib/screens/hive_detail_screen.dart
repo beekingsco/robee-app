@@ -113,64 +113,11 @@ class _HiveDetailScreenState extends State<HiveDetailScreen> {
       backgroundColor: RoBeeTheme.background,
       body: Stack(
         children: [
-          // Full-bleed background with gradient
-          Positioned.fill(
-            child: ShaderMask(
-              shaderCallback: (bounds) => LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  RoBeeTheme.background.withOpacity(0.7),
-                  RoBeeTheme.background,
-                ],
-                stops: const [0.0, 0.35, 0.65],
-              ).createShader(bounds),
-              blendMode: BlendMode.darken,
-              child: Image.network(
-                'https://images.unsplash.com/photo-1504618223053-559bdef9ad5c?q=80&w=2070',
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: Alignment.topCenter,
-                      radius: 1.2,
-                      colors: [
-                        healthColor.withOpacity(0.15),
-                        RoBeeTheme.background,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Health color tint overlay
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 220,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    healthColor.withOpacity(0.08),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // INSPECTION IN PROGRESS banner — ABOVE SafeArea, full width
+          // INSPECTION IN PROGRESS banner — full width, above SafeArea
           if (_isServicing)
             _TopInspectionBanner(hiveNumber: hive.hiveNumber),
 
           SafeArea(
-            top: !_isServicing, // When banner is showing, SafeArea handles below it
             child: CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(
@@ -394,13 +341,12 @@ class _FrameScanGallery extends StatelessWidget {
 
   const _FrameScanGallery({required this.snapshots, required this.hiveId});
 
-  // Unsplash hive placeholder images
-  static const _placeholders = [
-    // Frame scan placeholders — real beehive frame close-ups
-    'https://images.unsplash.com/photo-1601598851547-4302969d0614?q=80&w=400', // bees on honeycomb frame
-    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=400',    // honeycomb close-up
-    'https://images.unsplash.com/photo-1504618223053-559bdef9ad5c?q=80&w=400', // beekeeper with frame
-    'https://images.unsplash.com/photo-1568254183919-78a4f43a2877?q=80&w=400', // honeycomb detail
+  // Frame placeholder colors (flat panels — no photos)
+  static const _placeholderColors = [
+    Color(0xFF1A1510),
+    Color(0xFF141210),
+    Color(0xFF181410),
+    Color(0xFF141210),
   ];
 
   String _timeAgo(DateTime dt) {
@@ -444,13 +390,14 @@ class _FrameScanGallery extends StatelessWidget {
     int imgIdx = 0;
     for (final snap in frames) {
       for (final side in ['Side A', 'Side B']) {
-        final url = _placeholders[imgIdx % _placeholders.length];
+        final bgColor =
+            _placeholderColors[imgIdx % _placeholderColors.length];
         imgIdx++;
         cards.add(_ScanCard(
           frameNumber: snap.frameNumber,
           boxType: snap.boxType,
           side: side,
-          imageUrl: url,
+          bgColor: bgColor,
           timeAgo: _timeAgo(snap.timestamp),
           hasQueen: side == 'Side A' && (snap.hasQueen ?? false),
         ));
@@ -473,7 +420,7 @@ class _ScanCard extends StatelessWidget {
   final int frameNumber;
   final String boxType;
   final String side;
-  final String imageUrl;
+  final Color bgColor;
   final String timeAgo;
   final bool hasQueen;
 
@@ -481,7 +428,7 @@ class _ScanCard extends StatelessWidget {
     required this.frameNumber,
     required this.boxType,
     required this.side,
-    required this.imageUrl,
+    required this.bgColor,
     required this.timeAgo,
     required this.hasQueen,
   });
@@ -491,95 +438,110 @@ class _ScanCard extends StatelessWidget {
     return Container(
       width: 130,
       decoration: BoxDecoration(
+        color: bgColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: RoBeeTheme.glassWhite10),
+        border: Border.all(color: RoBeeTheme.border),
       ),
-      clipBehavior: Clip.hardEdge,
-      child: Stack(
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image
-          Positioned.fill(
-            child: Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                color: const Color(0xFF1A1208),
-                child: const Center(
-                  child: Icon(Icons.image_outlined,
-                      color: RoBeeTheme.glassWhite60),
-                ),
+          // Frame label tag
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: RoBeeTheme.amber.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: RoBeeTheme.amber.withOpacity(0.3)),
+            ),
+            child: Text(
+              '${boxType.toUpperCase()} F$frameNumber',
+              style: const TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                color: RoBeeTheme.amber,
+                letterSpacing: 0.5,
+                fontFamily: 'monospace',
               ),
             ),
           ),
-          // Gradient overlay
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Color(0xCC0C0A09)],
-                  stops: [0.4, 1.0],
-                ),
-              ),
+          const Spacer(),
+          // Scan placeholder — simple grid lines
+          SizedBox(
+            height: 40,
+            child: CustomPaint(
+              painter: _ScanPlaceholderPainter(),
+              size: const Size(double.infinity, 40),
             ),
           ),
-          // Labels
-          Positioned(
-            top: 8,
-            left: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: RoBeeTheme.amber.withOpacity(0.85),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                '${boxType.toUpperCase()} F$frameNumber',
-                style: const TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black,
-                  letterSpacing: 0.5,
-                ),
-              ),
+          const Spacer(),
+          Text(
+            side,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          if (hasQueen)
-            const Positioned(
-              top: 8,
-              right: 8,
-              child: Icon(Icons.star_rounded, color: RoBeeTheme.amber, size: 14),
-            ),
-          Positioned(
-            bottom: 8,
-            left: 8,
-            right: 8,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  side,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
+          const SizedBox(height: 2),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
                   timeAgo,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
-                    fontSize: 9,
+                  style: RoBeeTheme.monoSmall.copyWith(fontSize: 9),
+                ),
+              ),
+              if (hasQueen)
+                Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: RoBeeTheme.amber.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Text('Q',
+                        style: TextStyle(
+                            fontSize: 8,
+                            color: RoBeeTheme.amber,
+                            fontWeight: FontWeight.w800)),
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
         ],
       ),
     );
   }
+}
+
+class _ScanPlaceholderPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = RoBeeTheme.glassWhite10
+      ..strokeWidth = 0.5;
+    // Horizontal grid lines
+    for (int i = 1; i < 4; i++) {
+      final y = size.height * i / 4;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+    // Vertical grid lines
+    for (int i = 1; i < 6; i++) {
+      final x = size.width * i / 6;
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    // Amber scan line in middle
+    final scanPaint = Paint()
+      ..color = RoBeeTheme.amber.withOpacity(0.4)
+      ..strokeWidth = 1;
+    canvas.drawLine(
+        Offset(0, size.height / 2), Offset(size.width, size.height / 2), scanPaint);
+  }
+
+  @override
+  bool shouldRepaint(_ScanPlaceholderPainter _) => false;
 }
 
 // ── Supporting widgets ────────────────────────────────────────────────────────
@@ -750,8 +712,8 @@ class _HealthBanner extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: RoBeeTheme.glassWhite5,
-            borderRadius: BorderRadius.circular(14),
+            color: RoBeeTheme.panel,
+            borderRadius: BorderRadius.circular(12),
             border: Border(
               left: BorderSide(
                 color: isWarning
@@ -759,9 +721,9 @@ class _HealthBanner extends StatelessWidget {
                     : RoBeeTheme.healthGreen.withOpacity(0.7),
                 width: 3,
               ),
-              top: BorderSide(color: RoBeeTheme.glassWhite10),
-              right: BorderSide(color: RoBeeTheme.glassWhite10),
-              bottom: BorderSide(color: RoBeeTheme.glassWhite10),
+              top: BorderSide(color: RoBeeTheme.border),
+              right: BorderSide(color: RoBeeTheme.border),
+              bottom: BorderSide(color: RoBeeTheme.border),
             ),
           ),
           child: child,
@@ -862,7 +824,7 @@ class _HealthBanner extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: RoBeeTheme.glassWhite5,
+                color: RoBeeTheme.panel,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
