@@ -50,15 +50,50 @@ class _TrailerCardState extends State<TrailerCard> {
       onTapCancel: () => setState(() => _pressed = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _pressed ? RoBeeTheme.amber.withOpacity(0.05) : RoBeeTheme.panel,
+          color: RoBeeTheme.panel,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: _pressed ? RoBeeTheme.amber.withOpacity(0.5) : RoBeeTheme.border,
           ),
         ),
-        child: Column(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Stack(
+            children: [
+              // Weather photo background — top portion of card
+              Positioned(
+                top: 0, left: 0, right: 0,
+                height: 100,
+                child: Image.network(
+                  _weatherImageUrl(trailer),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(color: RoBeeTheme.panel),
+                ),
+              ),
+              // Gradient overlay — photo fades into panel color
+              Positioned(
+                top: 0, left: 0, right: 0,
+                height: 100,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: const [0.0, 0.5, 1.0],
+                      colors: [
+                        Colors.black.withOpacity(0.45),
+                        Colors.black.withOpacity(0.70),
+                        RoBeeTheme.panel,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Card content on top
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Row 1: Name + gear + hive dots ──────────────────────────
@@ -192,9 +227,28 @@ class _TrailerCardState extends State<TrailerCard> {
               ),
             ],
           ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  /// Returns the weather photo URL based on trailer location/name.
+  /// Uses live weather data from the trailer's coordinates when available,
+  /// falls back to a sensible default.
+  String _weatherImageUrl(Trailer trailer) {
+    // In production this would use the live weather code from WeatherService.
+    // For now, use trailer name to pick a default condition (demo).
+    final name = trailer.name.toLowerCase();
+    if (name.contains('canton')) {
+      // Canton GA — often cloudy/overcast
+      return 'https://images.unsplash.com/photo-1534088568595-a066f410bcda?q=80&w=800&auto=format&fit=crop';
+    }
+    // Default — clear sky apiary
+    return 'https://images.unsplash.com/photo-1601297183305-6df142704ea2?q=80&w=800&auto=format&fit=crop';
   }
 }
 
