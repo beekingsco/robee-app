@@ -165,7 +165,12 @@ class _HiveDetailScreenState extends State<HiveDetailScreen> {
             ),
           ),
 
+          // INSPECTION IN PROGRESS banner — ABOVE SafeArea, full width
+          if (_isServicing)
+            _TopInspectionBanner(hiveNumber: hive.hiveNumber),
+
           SafeArea(
+            top: !_isServicing, // When banner is showing, SafeArea handles below it
             child: CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(
@@ -256,11 +261,6 @@ class _HiveDetailScreenState extends State<HiveDetailScreen> {
                           ],
                         ),
                         const SizedBox(height: 16),
-
-                        // INSPECTION IN PROGRESS banner (shown when isServicing)
-                        if (_isServicing)
-                          _InspectionBanner(hiveNumber: hive.hiveNumber),
-                        if (_isServicing) const SizedBox(height: 12),
 
                         // Health status banner
                         _HealthBanner(
@@ -623,18 +623,19 @@ class _ChipButton extends StatelessWidget {
   }
 }
 
-class _InspectionBanner extends StatefulWidget {
+/// Full-width amber bar above SafeArea — prominent inspection banner
+class _TopInspectionBanner extends StatefulWidget {
   final int hiveNumber;
-  const _InspectionBanner({required this.hiveNumber});
+  const _TopInspectionBanner({required this.hiveNumber});
 
   @override
-  State<_InspectionBanner> createState() => _InspectionBannerState();
+  State<_TopInspectionBanner> createState() => _TopInspectionBannerState();
 }
 
-class _InspectionBannerState extends State<_InspectionBanner>
+class _TopInspectionBannerState extends State<_TopInspectionBanner>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
-  late Animation<double> _pulse;
+  late Animation<double> _opacity;
 
   @override
   void initState() {
@@ -643,7 +644,7 @@ class _InspectionBannerState extends State<_InspectionBanner>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
-    _pulse = Tween<double>(begin: 0.5, end: 1.0).animate(
+    _opacity = Tween<double>(begin: 0.65, end: 1.0).animate(
       CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
     );
   }
@@ -656,62 +657,34 @@ class _InspectionBannerState extends State<_InspectionBanner>
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
     return AnimatedBuilder(
-      animation: _pulse,
+      animation: _opacity,
       builder: (ctx, child) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: RoBeeTheme.amber.withOpacity(0.08 + 0.04 * _pulse.value),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: RoBeeTheme.amber.withOpacity(0.3 + 0.2 * _pulse.value),
-              width: 1.5,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: RoBeeTheme.amber.withOpacity(_pulse.value),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: RoBeeTheme.amber.withOpacity(_pulse.value * 0.5),
-                      blurRadius: 6,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'INSPECTION IN PROGRESS',
-                      style: TextStyle(
-                        color: RoBeeTheme.amber,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'RoBee is currently inspecting this hive',
-                      style: RoBeeTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        return Opacity(
+          opacity: _opacity.value,
+          child: child,
         );
       },
+      child: Container(
+        width: double.infinity,
+        color: RoBeeTheme.amber,
+        padding: EdgeInsets.fromLTRB(16, topPadding + 8, 16, 8),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '🔍 RoBee is inspecting this hive',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -756,56 +729,88 @@ class _HealthBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = RoBeeTheme.healthColor(hive.healthStatus);
-    return GlassCard(
-      onTap: onToggle,
-      borderColor: c.withOpacity(0.4),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(_statusIcon, color: c, size: 22),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  _statusText,
-                  style: TextStyle(
-                    color: c,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: onToggle,
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      expanded ? 'Hide' : 'Show Advanced Data',
-                      style: TextStyle(
-                        color: RoBeeTheme.glassWhite60,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    Icon(
-                      expanded
-                          ? Icons.keyboard_arrow_up_rounded
-                          : Icons.keyboard_arrow_down_rounded,
-                      color: RoBeeTheme.glassWhite60,
-                      size: 16,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+    final isCritical = hive.healthStatus.toLowerCase() == 'critical';
+    final isWarning = hive.healthStatus.toLowerCase() == 'warning';
+
+    // Critical → full red glass card. Healthy/warning → left border only.
+    Widget container(Widget child) {
+      if (isCritical) {
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: RoBeeTheme.healthRed.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: RoBeeTheme.healthRed.withOpacity(0.4)),
           ),
+          child: child,
+        );
+      }
+      return GestureDetector(
+        onTap: onToggle,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: RoBeeTheme.glassWhite5,
+            borderRadius: BorderRadius.circular(14),
+            border: Border(
+              left: BorderSide(
+                color: isWarning
+                    ? RoBeeTheme.healthYellow.withOpacity(0.7)
+                    : RoBeeTheme.healthGreen.withOpacity(0.7),
+                width: 3,
+              ),
+              top: BorderSide(color: RoBeeTheme.glassWhite10),
+              right: BorderSide(color: RoBeeTheme.glassWhite10),
+              bottom: BorderSide(color: RoBeeTheme.glassWhite10),
+            ),
+          ),
+          child: child,
+        ),
+      );
+    }
+
+    return container(Column(
+      children: [
+        Row(
+          children: [
+            Icon(_statusIcon, color: c, size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                _statusText,
+                style: TextStyle(
+                  color: c,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: onToggle,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    expanded ? 'Hide' : 'Details',
+                    style: TextStyle(
+                      color: RoBeeTheme.glassWhite60,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(
+                    expanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    color: RoBeeTheme.glassWhite60,
+                    size: 16,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
           if (expanded) ...[
             const SizedBox(height: 12),
             const Divider(color: RoBeeTheme.glassWhite10),

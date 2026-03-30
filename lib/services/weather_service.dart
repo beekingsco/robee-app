@@ -83,12 +83,12 @@ class WeatherService {
 
   /// Maps WMO code to icon-friendly emoji.
   static String weatherEmoji(int code, bool isDay) {
-    if (code == 0) return isDay ? '☀️' : '🌙';
-    if (code <= 3) return isDay ? '⛅' : '🌥️';
-    if (code <= 49) return '🌫️';
-    if (code <= 69) return '🌧️';
-    if (code <= 79) return '❄️';
-    return '⛈️';
+    if (code == 0) return isDay ? 'Clear' : 'Clear Night';
+    if (code <= 3) return isDay ? 'Partly Cloudy' : 'Cloudy';
+    if (code <= 49) return 'Foggy';
+    if (code <= 69) return 'Rain';
+    if (code <= 79) return 'Snow';
+    return 'Storm';
   }
 
   /// Returns true if the weather code represents rain/storm conditions.

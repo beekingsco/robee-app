@@ -195,8 +195,8 @@ class _TrailerCardState extends State<TrailerCard>
                       Expanded(
                         child: Text(
                           healthySummary
-                              ? 'All systems healthy 🌿'
-                              : '$unhealthyCount hive${unhealthyCount > 1 ? 's' : ''} need attention ⚠️',
+                              ? 'All systems healthy'
+                              : '$unhealthyCount hive${unhealthyCount > 1 ? 's' : ''} need attention',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -372,13 +372,13 @@ class _WeatherChip extends StatelessWidget {
     final isNorth = trailer.name.toLowerCase().contains('canton') ||
         trailer.name.toLowerCase().contains('north');
     final temp = isNorth ? '68°F' : '74°F';
-    final emoji = isNorth ? '⛅' : '☀️';
+    final condition = isNorth ? 'Cloudy' : 'Clear';
     final humidity = isNorth ? '58%' : '63%';
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(emoji, style: const TextStyle(fontSize: 14)),
+        Text(condition, style: const TextStyle(fontSize: 11, color: Colors.white70)),
         const SizedBox(width: 5),
         Text(
           '$temp · $humidity',

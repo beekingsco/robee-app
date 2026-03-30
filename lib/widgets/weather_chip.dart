@@ -77,7 +77,7 @@ class _WeatherChipState extends State<WeatherChip> {
     }
 
     final temp = _convertTemp(_weather!.temperature);
-    final emoji = WeatherService.weatherEmoji(
+    final condition = WeatherService.weatherEmoji(
       _weather!.conditionCode,
       _weather!.isDay,
     );
@@ -92,7 +92,11 @@ class _WeatherChipState extends State<WeatherChip> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 14)),
+          Icon(
+            _weatherIcon(_weather!.conditionCode, _weather!.isDay),
+            size: 14,
+            color: Colors.white70,
+          ),
           const SizedBox(width: 4),
           Text(
             '${temp.round()}°${widget.tempUnit}',
@@ -113,5 +117,15 @@ class _WeatherChipState extends State<WeatherChip> {
         ],
       ),
     );
+  }
+
+  IconData _weatherIcon(int code, bool isDay) {
+    if (code >= 95) return Icons.thunderstorm_outlined;
+    if (code >= 61) return Icons.grain;
+    if (code >= 51) return Icons.water_drop_outlined;
+    if (code >= 71) return Icons.ac_unit;
+    if (code >= 40) return Icons.foggy;
+    if (code >= 1) return isDay ? Icons.wb_cloudy_outlined : Icons.nights_stay_outlined;
+    return isDay ? Icons.wb_sunny_outlined : Icons.nights_stay_outlined;
   }
 }

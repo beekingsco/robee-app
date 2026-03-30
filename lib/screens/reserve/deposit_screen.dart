@@ -108,7 +108,7 @@ class _DepositScreenState extends State<DepositScreen> {
 
                     // Value props
                     ...[
-                      ('🐝', 'First production run unit'),
+                      ('1st Run', 'First production run unit'),
                       ('🔒', '\$100 fully refundable deposit'),
                       ('📦', 'Spring 2026 delivery'),
                       ('⚡', 'Priority support & early access'),

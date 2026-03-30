@@ -351,10 +351,10 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('🌿', style: TextStyle(fontSize: 48)),
+          const Text('', style: TextStyle(fontSize: 48)),
           const SizedBox(height: 16),
           Text(
-            filter == 'Resolved' ? 'No resolved alerts' : 'No alerts 🌿',
+            filter == 'Resolved' ? 'No resolved alerts' : 'No alerts',
             style: RoBeeTheme.headlineMedium,
           ),
           const SizedBox(height: 8),

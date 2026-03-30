@@ -1,21 +1,23 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../config/router.dart' show demoModeProvider;
 import '../theme/robee_theme.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
-  late Animation<double> _pulseAnim;
-  late Animation<double> _fadeAnim;
+  late Animation<double> _pulseScale;
+  late Animation<double> _pulseOpacity;
 
   @override
   void initState() {
@@ -25,10 +27,10 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 1800),
     )..repeat(reverse: true);
 
-    _pulseAnim = Tween<double>(begin: 0.85, end: 1.15).animate(
+    _pulseScale = Tween<double>(begin: 0.85, end: 1.15).animate(
       CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
     );
-    _fadeAnim = Tween<double>(begin: 0.3, end: 0.7).animate(
+    _pulseOpacity = Tween<double>(begin: 0.3, end: 0.7).animate(
       CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
     );
 
@@ -42,18 +44,25 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _redirect() async {
-    await Future.delayed(const Duration(milliseconds: 2200));
+    await Future.delayed(const Duration(milliseconds: 2500));
     if (!mounted) return;
+
+    // Check demo mode state
+    final isDemo = ref.read(demoModeProvider);
+    if (isDemo) {
+      context.go('/home');
+      return;
+    }
 
     try {
       final session = Supabase.instance.client.auth.currentSession;
       if (session != null) {
         context.go('/home');
       } else {
-        context.go('/home'); // demo mode: go straight to home
+        context.go('/login');
       }
     } catch (_) {
-      context.go('/home'); // demo mode
+      context.go('/login');
     }
   }
 
@@ -65,39 +74,46 @@ class _SplashScreenState extends State<SplashScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Hex logo with amber pulse
             AnimatedBuilder(
               animation: _ctrl,
               builder: (context, child) {
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Outer pulse ring
-                    Container(
-                      width: 120 * _pulseAnim.value,
-                      height: 120 * _pulseAnim.value,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: RoBeeTheme.amber.withOpacity(_fadeAnim.value * 0.6),
-                          width: 1.5,
+                return SizedBox(
+                  width: 140,
+                  height: 140,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Outer pulse ring
+                      Container(
+                        width: 130 * _pulseScale.value,
+                        height: 130 * _pulseScale.value,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: RoBeeTheme.amber
+                                .withOpacity(_pulseOpacity.value * 0.5),
+                            width: 1.5,
+                          ),
                         ),
                       ),
-                    ),
-                    // Inner pulse ring
-                    Container(
-                      width: 100 * _pulseAnim.value,
-                      height: 100 * _pulseAnim.value,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: RoBeeTheme.amber.withOpacity(_fadeAnim.value * 0.4),
-                          width: 1,
+                      // Inner pulse ring
+                      Container(
+                        width: 108 * _pulseScale.value,
+                        height: 108 * _pulseScale.value,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: RoBeeTheme.amber
+                                .withOpacity(_pulseOpacity.value * 0.35),
+                            width: 1,
+                          ),
                         ),
                       ),
-                    ),
-                    // Logo hex container
-                    child!,
-                  ],
+                      // Logo container
+                      child!,
+                    ],
+                  ),
                 );
               },
               child: Container(
@@ -118,9 +134,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ],
                 ),
-                child: const Center(
-                  child: _HexLogo(),
-                ),
+                child: const Center(child: _HexLogo()),
               ),
             ),
             const SizedBox(height: 28),
@@ -135,11 +149,11 @@ class _SplashScreenState extends State<SplashScreen>
             ),
             const SizedBox(height: 6),
             Text(
-              'Robotic Hive Assistant',
+              'The Future of Apiary Management',
               style: TextStyle(
                 fontSize: 13,
                 color: Colors.white.withOpacity(0.5),
-                letterSpacing: 0.5,
+                letterSpacing: 0.3,
               ),
             ),
             const SizedBox(height: 48),
@@ -198,11 +212,19 @@ class _HexPainter extends CustomPainter {
     path.close();
     canvas.drawPath(path, paint);
 
-    // Bee dot inside
-    final dotPaint = Paint()
-      ..color = RoBeeTheme.amber
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(cx, cy), 4, dotPaint);
+    // Bee emoji inside hex
+    final textPainter = TextPainter(
+      text: const TextSpan(
+        text: 'R',
+        style: TextStyle(fontSize: 18),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      Offset(cx - textPainter.width / 2, cy - textPainter.height / 2),
+    );
   }
 
   @override
