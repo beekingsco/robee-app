@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/app_config.dart';
 import '../theme/robee_theme.dart';
 import '../widgets/glass_card.dart';
@@ -17,10 +16,14 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _armUrlCtrl = TextEditingController();
   bool _mockArmEnabled = true;
+  bool _notificationsEnabled = true;
+  bool _autoInspectEnabled = true;
   bool _loading = true;
 
   static const _keyArmUrl = 'pref_arm_ws_url';
   static const _keyMockArm = 'pref_mock_arm';
+  static const _keyNotifications = 'pref_notifications';
+  static const _keyAutoInspect = 'pref_auto_inspect';
 
   @override
   void initState() {
@@ -34,6 +37,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _armUrlCtrl.text =
           prefs.getString(_keyArmUrl) ?? AppConfig.defaultArmWsUrl;
       _mockArmEnabled = prefs.getBool(_keyMockArm) ?? true;
+      _notificationsEnabled = prefs.getBool(_keyNotifications) ?? true;
+      _autoInspectEnabled = prefs.getBool(_keyAutoInspect) ?? true;
       _loading = false;
     });
   }
@@ -42,6 +47,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyArmUrl, _armUrlCtrl.text.trim());
     await prefs.setBool(_keyMockArm, _mockArmEnabled);
+    await prefs.setBool(_keyNotifications, _notificationsEnabled);
+    await prefs.setBool(_keyAutoInspect, _autoInspectEnabled);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -64,7 +71,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _signOut() async {
-    await Supabase.instance.client.auth.signOut();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+    } catch (_) {}
     if (mounted) context.go('/login');
   }
 
@@ -76,8 +86,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = Supabase.instance.client.auth.currentUser;
-
     if (_loading) {
       return const Scaffold(
         backgroundColor: RoBeeTheme.background,
@@ -124,7 +132,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: EdgeInsets.zero,
                     child: Column(
                       children: [
-                        _ProfileRow(user: user),
+                        const _ProfileRow(name: 'BEEKEEPER', email: 'chris@beekings.com'),
                         const Divider(
                             height: 1, color: RoBeeTheme.border),
                         _SettingsTile(
@@ -132,6 +140,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           label: 'SIGN OUT',
                           labelColor: RoBeeTheme.healthRed,
                           onTap: _signOut,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // ── NOTIFICATIONS section ─────────────────────────────────
+                  _SectionHeader('NOTIFICATIONS'),
+                  const SizedBox(height: 8),
+                  GlassCard(
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      children: [
+                        _ToggleTile(
+                          icon: Icons.notifications_outlined,
+                          label: 'PUSH ALERTS',
+                          subtitle: 'SWARM, DISEASE, QUEEN EVENTS',
+                          value: _notificationsEnabled,
+                          onChanged: (v) {
+                            setState(() => _notificationsEnabled = v);
+                            _savePrefs();
+                          },
+                        ),
+                        const Divider(height: 1, color: RoBeeTheme.border),
+                        _ToggleTile(
+                          icon: Icons.schedule_outlined,
+                          label: 'AUTO-INSPECT',
+                          subtitle: 'DAILY SCHEDULED FRAME SCAN',
+                          value: _autoInspectEnabled,
+                          onChanged: (v) {
+                            setState(() => _autoInspectEnabled = v);
+                            _savePrefs();
+                          },
                         ),
                       ],
                     ),
@@ -270,14 +311,12 @@ class _SectionHeader extends StatelessWidget {
 // ── Profile Row ───────────────────────────────────────────────────────────────
 
 class _ProfileRow extends StatelessWidget {
-  final dynamic user;
-  const _ProfileRow({this.user});
+  final String name;
+  final String email;
+  const _ProfileRow({super.key, required this.name, required this.email});
 
   @override
   Widget build(BuildContext context) {
-    final name = (user?.userMetadata?['full_name'] as String?)
-        ?? 'BEEKEEPER';
-    final email = user?.email ?? '--';
     final initial = name.isNotEmpty ? name[0].toUpperCase() : 'B';
 
     return Padding(
