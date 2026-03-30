@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../models/alert.dart';
 import '../models/trailer.dart';
 import '../services/mock_data.dart';
@@ -17,10 +16,10 @@ class AlertsScreen extends StatefulWidget {
 class _AlertsScreenState extends State<AlertsScreen> {
   List<RoBeeAlert> _alerts = [];
   List<Trailer> _trailers = [];
-  String _filter = 'All';
+  String _filter = 'ALL';
   bool _loading = true;
 
-  static const _filters = ['All', 'Critical', 'Warning', 'Info', 'Resolved'];
+  static const _filters = ['ALL', 'CRITICAL', 'WARNING', 'INFO', 'RESOLVED'];
 
   @override
   void initState() {
@@ -42,6 +41,13 @@ class _AlertsScreenState extends State<AlertsScreen> {
     if (alerts.isEmpty) alerts = List.from(MockData.alerts);
     if (trailers.isEmpty) trailers = MockData.trailers;
 
+    // Priority sort: CRITICAL -> WARNING -> INFO -> resolved
+    alerts.sort((a, b) {
+      if (a.isResolved != b.isResolved) return a.isResolved ? 1 : -1;
+      const order = {'critical': 0, 'warning': 1, 'info': 2};
+      return (order[a.severity] ?? 3).compareTo(order[b.severity] ?? 3);
+    });
+
     if (mounted) {
       setState(() {
         _alerts = alerts;
@@ -53,47 +59,23 @@ class _AlertsScreenState extends State<AlertsScreen> {
 
   List<RoBeeAlert> get _filtered {
     switch (_filter) {
-      case 'Critical':
+      case 'CRITICAL':
         return _alerts
             .where((a) => a.severity == 'critical' && !a.isResolved)
             .toList();
-      case 'Warning':
+      case 'WARNING':
         return _alerts
             .where((a) => a.severity == 'warning' && !a.isResolved)
             .toList();
-      case 'Info':
+      case 'INFO':
         return _alerts
             .where((a) => a.severity == 'info' && !a.isResolved)
             .toList();
-      case 'Resolved':
+      case 'RESOLVED':
         return _alerts.where((a) => a.isResolved).toList();
       default:
         return _alerts;
     }
-  }
-
-  Map<String, List<RoBeeAlert>> get _grouped {
-    final groups = <String, List<RoBeeAlert>>{};
-    // Sort: unresolved first, then resolved
-    final sorted = [..._filtered];
-    sorted.sort((a, b) {
-      if (a.isResolved != b.isResolved) {
-        return a.isResolved ? 1 : -1;
-      }
-      // Critical first within group
-      const severityOrder = {'critical': 0, 'warning': 1, 'info': 2};
-      return (severityOrder[a.severity] ?? 3)
-          .compareTo(severityOrder[b.severity] ?? 3);
-    });
-
-    for (final alert in sorted) {
-      final trailer = _trailers.firstWhere(
-        (t) => t.id == alert.trailerId,
-        orElse: () => Trailer(id: alert.trailerId, name: 'Unknown Trailer'),
-      );
-      groups.putIfAbsent(trailer.name, () => []).add(alert);
-    }
-    return groups;
   }
 
   void _resolve(RoBeeAlert alert) {
@@ -115,22 +97,45 @@ class _AlertsScreenState extends State<AlertsScreen> {
       case 'warning':
         return RoBeeTheme.healthYellow;
       default:
-        return const Color(0xFF60A5FA); // info blue
+        return const Color(0xFF60A5FA);
     }
   }
 
   IconData _severityIcon(String severity) {
     switch (severity) {
       case 'critical':
-        return Icons.error_rounded; // octagon-ish
+        return Icons.error_outline;
       case 'warning':
-        return Icons.warning_amber_rounded; // triangle
+        return Icons.warning_amber_outlined;
       default:
-        return Icons.info_rounded; // circle info
+        return Icons.info_outline;
     }
   }
 
   int get _unresolvedCount => _alerts.where((a) => !a.isResolved).length;
+
+  int _countForFilter(String f) {
+    switch (f) {
+      case 'ALL':
+        return _alerts.where((a) => !a.isResolved).length;
+      case 'CRITICAL':
+        return _alerts
+            .where((a) => a.severity == 'critical' && !a.isResolved)
+            .length;
+      case 'WARNING':
+        return _alerts
+            .where((a) => a.severity == 'warning' && !a.isResolved)
+            .length;
+      case 'INFO':
+        return _alerts
+            .where((a) => a.severity == 'info' && !a.isResolved)
+            .length;
+      case 'RESOLVED':
+        return _alerts.where((a) => a.isResolved).length;
+      default:
+        return 0;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +144,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+            // ── Header ────────────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: Row(
@@ -151,15 +156,18 @@ class _AlertsScreenState extends State<AlertsScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        color: RoBeeTheme.healthRed.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        color: RoBeeTheme.healthRed.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(6),
                         border: Border.all(
                             color: RoBeeTheme.healthRed.withOpacity(0.3)),
                       ),
                       child: Text(
-                        '$_unresolvedCount active',
+                        '$_unresolvedCount ACTIVE',
                         style: RoBeeTheme.monoSmall.copyWith(
                           color: RoBeeTheme.healthRed,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.5,
                         ),
                       ),
                     ),
@@ -168,7 +176,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
             ),
             const SizedBox(height: 14),
 
-            // Filter chips
+            // ── Filter chips ──────────────────────────────────────────────────
             SizedBox(
               height: 36,
               child: ListView(
@@ -179,21 +187,37 @@ class _AlertsScreenState extends State<AlertsScreen> {
                   final count = _countForFilter(f);
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text(count > 0 ? '$f ($count)' : f),
-                      selected: selected,
-                      onSelected: (_) => setState(() => _filter = f),
-                      selectedColor: RoBeeTheme.amber.withOpacity(0.2),
-                      checkmarkColor: RoBeeTheme.amber,
-                      labelStyle: TextStyle(
-                        color: selected ? RoBeeTheme.amber : Colors.white,
-                        fontSize: 12,
-                        fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                      ),
-                      side: BorderSide(
-                        color: selected
-                            ? RoBeeTheme.amber.withOpacity(0.4)
-                            : RoBeeTheme.glassWhite10,
+                    child: GestureDetector(
+                      onTap: () => setState(() => _filter = f),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 0),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? RoBeeTheme.amber.withOpacity(0.15)
+                              : RoBeeTheme.panel,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: selected
+                                ? RoBeeTheme.amber.withOpacity(0.4)
+                                : RoBeeTheme.border,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          count > 0 ? '$f ($count)' : f,
+                          style: TextStyle(
+                            color: selected
+                                ? RoBeeTheme.amber
+                                : RoBeeTheme.glassWhite60,
+                            fontSize: 11,
+                            fontWeight: selected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
                       ),
                     ),
                   );
@@ -202,54 +226,21 @@ class _AlertsScreenState extends State<AlertsScreen> {
             ),
             const SizedBox(height: 10),
 
-            // Alerts list
+            // ── Content ───────────────────────────────────────────────────────
             Expanded(
               child: _loading
                   ? const Center(
-                      child:
-                          CircularProgressIndicator(color: RoBeeTheme.amber))
-                  : _grouped.isEmpty
+                      child: CircularProgressIndicator(
+                          color: RoBeeTheme.amber))
+                  : _filtered.isEmpty
                       ? _EmptyState(filter: _filter)
                       : ListView(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           children: [
-                            ..._grouped.entries.expand((entry) {
-                              return [
-                                // Section header
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 10),
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        entry.key.toUpperCase(),
-                                        style: RoBeeTheme.labelLarge.copyWith(
-                                          color: Colors.white,
-                                          letterSpacing: 2,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Container(
-                                        width: 1,
-                                        height: 12,
-                                        color: RoBeeTheme.border,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '${entry.value.length} alert${entry.value.length > 1 ? 's' : ''}',
-                                        style: RoBeeTheme.labelSmall,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                ...entry.value.map((alert) => Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 8),
-                                      child: _buildDismissible(alert),
-                                    )),
-                              ];
-                            }),
+                            ..._filtered.map((alert) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: _buildDismissible(alert),
+                                )),
                             const SizedBox(height: 20),
                           ],
                         ),
@@ -258,29 +249,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
         ),
       ),
     );
-  }
-
-  int _countForFilter(String f) {
-    switch (f) {
-      case 'All':
-        return _alerts.where((a) => !a.isResolved).length;
-      case 'Critical':
-        return _alerts
-            .where((a) => a.severity == 'critical' && !a.isResolved)
-            .length;
-      case 'Warning':
-        return _alerts
-            .where((a) => a.severity == 'warning' && !a.isResolved)
-            .length;
-      case 'Info':
-        return _alerts
-            .where((a) => a.severity == 'info' && !a.isResolved)
-            .length;
-      case 'Resolved':
-        return _alerts.where((a) => a.isResolved).length;
-      default:
-        return 0;
-    }
   }
 
   Widget _buildDismissible(RoBeeAlert alert) {
@@ -302,21 +270,24 @@ class _AlertsScreenState extends State<AlertsScreen> {
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.only(left: 20),
         decoration: BoxDecoration(
-          color: RoBeeTheme.healthGreen.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(14),
+          color: RoBeeTheme.healthGreen.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: RoBeeTheme.healthGreen.withOpacity(0.25)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.check_circle_rounded,
-                color: RoBeeTheme.healthGreen, size: 22),
+            const Icon(Icons.check_circle_outline,
+                color: RoBeeTheme.healthGreen, size: 20),
             const SizedBox(width: 8),
             Text(
-              'Resolve',
+              'RESOLVE',
               style: TextStyle(
                 color: RoBeeTheme.healthGreen,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.5,
               ),
             ),
           ],
@@ -335,6 +306,8 @@ class _AlertsScreenState extends State<AlertsScreen> {
   }
 }
 
+// ── Empty State ───────────────────────────────────────────────────────────────
+
 class _EmptyState extends StatelessWidget {
   final String filter;
   const _EmptyState({required this.filter});
@@ -345,24 +318,34 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('', style: TextStyle(fontSize: 48)),
-          const SizedBox(height: 16),
+          const Icon(
+            Icons.check_circle_outline,
+            size: 48,
+            color: RoBeeTheme.glassWhite20,
+          ),
+          const SizedBox(height: 20),
           Text(
-            filter == 'Resolved' ? 'No resolved alerts' : 'No alerts',
-            style: RoBeeTheme.headlineMedium,
+            'NO ACTIVE ALERTS',
+            style: RoBeeTheme.monoLarge.copyWith(
+              fontSize: 16,
+              color: RoBeeTheme.glassWhite60,
+              letterSpacing: 2.0,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
-            filter == 'All'
-                ? 'All your hives are healthy'
-                : 'No ${filter.toLowerCase()} alerts',
-            style: RoBeeTheme.bodyMedium,
+            filter == 'RESOLVED'
+                ? 'NO RESOLVED ALERTS'
+                : 'ALL SYSTEMS NOMINAL',
+            style: RoBeeTheme.labelSmall,
           ),
         ],
       ),
     );
   }
 }
+
+// ── Alert Card ────────────────────────────────────────────────────────────────
 
 class _AlertCard extends StatelessWidget {
   final RoBeeAlert alert;
@@ -375,66 +358,81 @@ class _AlertCard extends StatelessWidget {
     required this.severityIcon,
   });
 
-  String _timeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} minutes ago';
-    if (diff.inHours < 24) {
-      return '${diff.inHours} hour${diff.inHours > 1 ? 's' : ''} ago';
-    }
-    return '${diff.inDays} day${diff.inDays > 1 ? 's' : ''} ago';
+  String _fmtTimestamp(DateTime dt) {
+    final y = dt.year.toString();
+    final mo = dt.month.toString().padLeft(2, '0');
+    final d = dt.day.toString().padLeft(2, '0');
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    return '$y-$mo-$d $h:$m';
   }
 
   @override
   Widget build(BuildContext context) {
     final c = severityColor;
-    return GlassCard(
-      borderColor: c.withOpacity(0.25),
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1A17),
+        borderRadius: BorderRadius.circular(12),
+        border: Border(
+          left: BorderSide(color: c, width: 3),
+          top: BorderSide(color: RoBeeTheme.border, width: 1),
+          right: BorderSide(color: RoBeeTheme.border, width: 1),
+          bottom: BorderSide(color: RoBeeTheme.border, width: 1),
+        ),
+      ),
       padding: const EdgeInsets.all(14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Severity icon
+          // Icon
           Container(
-            width: 36,
-            height: 36,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
-              color: c.withOpacity(0.12),
+              color: c.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(severityIcon, color: c, size: 18),
+            child: Icon(severityIcon, color: c, size: 17),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Title + severity badge
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Text(
                         alert.title,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
                         ),
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                          horizontal: 7, vertical: 3),
                       decoration: BoxDecoration(
-                        color: c.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(6),
+                        color: c.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                        border:
+                            Border.all(color: c.withOpacity(0.3)),
                       ),
                       child: Text(
                         alert.severity.toUpperCase(),
                         style: TextStyle(
                           color: c,
                           fontSize: 9,
+                          fontFamily: 'monospace',
                           fontWeight: FontWeight.w700,
-                          letterSpacing: 0.5,
+                          letterSpacing: 1.5,
                         ),
                       ),
                     ),
@@ -445,33 +443,30 @@ class _AlertCard extends StatelessWidget {
                   alert.message,
                   style: RoBeeTheme.bodyMedium.copyWith(fontSize: 12),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
+                // Timestamp row
                 Row(
                   children: [
-                    Icon(Icons.access_time_rounded,
+                    const Icon(Icons.access_time_outlined,
                         size: 11, color: RoBeeTheme.glassWhite60),
                     const SizedBox(width: 4),
                     Text(
-                      _timeAgo(alert.createdAt),
-                      style:
-                          RoBeeTheme.labelSmall.copyWith(fontSize: 10),
+                      _fmtTimestamp(alert.createdAt),
+                      style: RoBeeTheme.monoSmall.copyWith(
+                          fontSize: 10, letterSpacing: 0.5),
                     ),
                     if (alert.isResolved) ...[
                       const Spacer(),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.check_circle_rounded,
-                              size: 11, color: RoBeeTheme.healthGreen),
-                          const SizedBox(width: 3),
-                          Text(
-                            'Resolved',
-                            style: RoBeeTheme.labelSmall.copyWith(
-                              color: RoBeeTheme.healthGreen,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
+                      const Icon(Icons.check_circle_outline,
+                          size: 11, color: RoBeeTheme.healthGreen),
+                      const SizedBox(width: 3),
+                      Text(
+                        'RESOLVED',
+                        style: RoBeeTheme.monoSmall.copyWith(
+                          color: RoBeeTheme.healthGreen,
+                          fontSize: 10,
+                          letterSpacing: 1.2,
+                        ),
                       ),
                     ],
                   ],

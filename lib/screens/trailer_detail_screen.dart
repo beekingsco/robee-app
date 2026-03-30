@@ -13,6 +13,25 @@ import '../widgets/hive_card.dart';
 import '../widgets/inspection_bay.dart';
 import '../widgets/glass_card.dart';
 
+// ── Fleet status dot colors ────────────────────────────────────────────────────
+Color _hiveStatusColor(String status) {
+  switch (status.toLowerCase()) {
+    case 'healthy':
+    case 'good':
+      return RoBeeTheme.healthGreen;
+    case 'warning':
+    case 'moderate':
+      return RoBeeTheme.healthYellow;
+    case 'critical':
+    case 'poor':
+      return RoBeeTheme.healthRed;
+    case 'offline':
+      return RoBeeTheme.glassWhite60;
+    default:
+      return RoBeeTheme.glassWhite60;
+  }
+}
+
 class TrailerDetailScreen extends StatefulWidget {
   final String trailerId;
 
@@ -29,6 +48,7 @@ class _TrailerDetailScreenState extends State<TrailerDetailScreen> {
   Timer? _clockTimer;
   Timer? _inspectionTimer;
   DateTime _now = DateTime.now();
+  final ScrollController _hiveScrollCtrl = ScrollController();
 
   // Inspection sim state
   int? _activeHiveIndex;
@@ -58,6 +78,7 @@ class _TrailerDetailScreenState extends State<TrailerDetailScreen> {
   void dispose() {
     _clockTimer?.cancel();
     _inspectionTimer?.cancel();
+    _hiveScrollCtrl.dispose();
     super.dispose();
   }
 
@@ -216,7 +237,7 @@ class _TrailerDetailScreenState extends State<TrailerDetailScreen> {
                           ],
                         ),
                       ),
-                      // Right side: clock + weather
+                      // Right side: clock + weather chip
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
@@ -226,9 +247,11 @@ class _TrailerDetailScreenState extends State<TrailerDetailScreen> {
                           ),
                           if (_weather != null)
                             Text(
-                              '${WeatherService.weatherEmoji(_weatherCode, _isDay)} ${(_weather!.temperature * 9 / 5 + 32).round()}°F',
-                              style: RoBeeTheme.bodyMedium
-                                  .copyWith(fontSize: 10),
+                              '${(_weather!.temperature * 9 / 5 + 32).round()}F  ${WeatherService.weatherEmoji(_weatherCode, _isDay).toUpperCase()}',
+                              style: RoBeeTheme.monoSmall.copyWith(
+                                fontSize: 9,
+                                letterSpacing: 1.2,
+                              ),
                             ),
                         ],
                       ),
@@ -254,6 +277,22 @@ class _TrailerDetailScreenState extends State<TrailerDetailScreen> {
                   tempUnit: t.tempUnit,
                 ),
               ),
+              const SizedBox(height: 6),
+
+              // Fleet status bar
+              if (_hives.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _FleetStatusBar(
+                    hives: _hives,
+                    activeHiveNumber: activeHiveNumber,
+                    isInspecting: _isInspecting,
+                    onDotTap: (hiveNumber) {
+                      // Scroll the hive columns — best effort since they're
+                      // inside a fixed-height Expanded; highlight via activeHive
+                    },
+                  ),
+                ),
               const SizedBox(height: 6),
 
               // Main 3-column layout
@@ -322,6 +361,116 @@ class _TrailerDetailScreenState extends State<TrailerDetailScreen> {
     );
   }
 }
+
+// ── Fleet Status Bar ──────────────────────────────────────────────────────────
+
+class _FleetStatusBar extends StatelessWidget {
+  final List<Hive> hives;
+  final int? activeHiveNumber;
+  final bool isInspecting;
+  final ValueChanged<int> onDotTap;
+
+  const _FleetStatusBar({
+    required this.hives,
+    required this.activeHiveNumber,
+    required this.isInspecting,
+    required this.onDotTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Sort by hive number, show up to 6
+    final sorted = [...hives]..sort((a, b) => a.hiveNumber.compareTo(b.hiveNumber));
+    final display = sorted.take(6).toList();
+
+    return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      child: Row(
+        children: [
+          Text(
+            'FLEET',
+            style: RoBeeTheme.labelSmall.copyWith(letterSpacing: 1.5),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: List.generate(display.length, (i) {
+                final hive = display[i];
+                final dotColor = _hiveStatusColor(hive.healthStatus);
+                final isActive =
+                    isInspecting && hive.hiveNumber == activeHiveNumber;
+                return GestureDetector(
+                  onTap: () => onDotTap(hive.hiveNumber),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        width: isActive ? 14 : 10,
+                        height: isActive ? 14 : 10,
+                        decoration: BoxDecoration(
+                          color: dotColor,
+                          shape: BoxShape.circle,
+                          boxShadow: isActive
+                              ? [
+                                  BoxShadow(
+                                    color: dotColor.withOpacity(0.5),
+                                    blurRadius: 6,
+                                    spreadRadius: 1,
+                                  )
+                                ]
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'H${hive.hiveNumber}',
+                        style: TextStyle(
+                          fontSize: 8,
+                          fontFamily: 'monospace',
+                          fontWeight: isActive
+                              ? FontWeight.w700
+                              : FontWeight.w400,
+                          color: isActive
+                              ? RoBeeTheme.amber
+                              : RoBeeTheme.glassWhite60,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ),
+          const SizedBox(width: 12),
+          if (isInspecting)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: RoBeeTheme.amber.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                    color: RoBeeTheme.amber.withOpacity(0.3)),
+              ),
+              child: Text(
+                'SCANNING',
+                style: RoBeeTheme.monoSmall.copyWith(
+                  color: RoBeeTheme.amber,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _HiveColumn extends StatelessWidget {
   final List<Hive> hives;
